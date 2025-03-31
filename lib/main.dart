@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:svsflutterui/tabbed_layout.dart';
+import 'package:svsflutterui/student_profile_screen.dart';
 import 'auth_provider.dart';
 
 void main() {
@@ -62,7 +62,7 @@ class LoginScreen extends StatelessWidget {
                           maxWidth: MediaQuery.of(context).size.width * 0.8,
                           maxHeight: MediaQuery.of(context).size.height * 0.9,
                         ),
-                        child: TabbedLayout(),
+                        child: StudentProfileScreen(),
                       ),
                     );
                   },

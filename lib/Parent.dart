@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
 
 class ParentProfile extends StatefulWidget {
-  const ParentProfile({super.key});
+  final Function(bool) onValidationChanged;
+
+  const ParentProfile({
+    super.key,
+    required this.onValidationChanged,
+  });
 
   @override
   State<ParentProfile> createState() => _ParentProfileState();
@@ -45,7 +50,48 @@ class _ParentProfileState extends State<ParentProfile> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    // Add listeners to all text controllers
+    _motherFirstNameController.addListener(_validateForm);
+    _motherLastNameController.addListener(_validateForm);
+    _motherContactController.addListener(_validateForm);
+    _motherEmailController.addListener(_validateForm);
+    _motherSocialMediaController.addListener(_validateForm);
+    _motherProfessionController.addListener(_validateForm);
+    _fatherFirstNameController.addListener(_validateForm);
+    _fatherLastNameController.addListener(_validateForm);
+    _fatherContactController.addListener(_validateForm);
+    _fatherEmailController.addListener(_validateForm);
+    _fatherSocialMediaController.addListener(_validateForm);
+    _fatherProfessionController.addListener(_validateForm);
+    _addressController.addListener(_validateForm);
+    _emergencyContactController.addListener(_validateForm);
+  }
+
+  void _validateForm() {
+    if (_formKey.currentState != null) {
+      final isValid = _formKey.currentState!.validate();
+      widget.onValidationChanged(isValid);
+    }
+  }
+
+  @override
   void dispose() {
+    _motherFirstNameController.removeListener(_validateForm);
+    _motherLastNameController.removeListener(_validateForm);
+    _motherContactController.removeListener(_validateForm);
+    _motherEmailController.removeListener(_validateForm);
+    _motherSocialMediaController.removeListener(_validateForm);
+    _motherProfessionController.removeListener(_validateForm);
+    _fatherFirstNameController.removeListener(_validateForm);
+    _fatherLastNameController.removeListener(_validateForm);
+    _fatherContactController.removeListener(_validateForm);
+    _fatherEmailController.removeListener(_validateForm);
+    _fatherSocialMediaController.removeListener(_validateForm);
+    _fatherProfessionController.removeListener(_validateForm);
+    _addressController.removeListener(_validateForm);
+    _emergencyContactController.removeListener(_validateForm);
     _motherFirstNameController.dispose();
     _motherLastNameController.dispose();
     _motherContactController.dispose();

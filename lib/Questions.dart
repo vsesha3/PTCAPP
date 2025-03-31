@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
 
 class Questions extends StatefulWidget {
-  const Questions({super.key});
+  final Function(bool) onValidationChanged;
+
+  const Questions({
+    super.key,
+    required this.onValidationChanged,
+  });
 
   @override
   State<Questions> createState() => _QuestionsState();
@@ -46,7 +51,52 @@ class _QuestionsState extends State<Questions> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    _otherSourceController.addListener(_validateForm);
+  }
+
+  void _validateForm() {
+    if (_formKey.currentState != null) {
+      final isValid = _formKey.currentState!.validate() &&
+          (_facebookSelected ||
+              _instagramSelected ||
+              _friendSelected ||
+              _websiteSelected ||
+              (_othersSelected && _otherSourceController.text.isNotEmpty));
+      widget.onValidationChanged(isValid);
+    }
+  }
+
+  void _updateCheckboxState(String checkbox, bool? value) {
+    setState(() {
+      switch (checkbox) {
+        case 'facebook':
+          _facebookSelected = value ?? false;
+          break;
+        case 'instagram':
+          _instagramSelected = value ?? false;
+          break;
+        case 'friend':
+          _friendSelected = value ?? false;
+          break;
+        case 'website':
+          _websiteSelected = value ?? false;
+          break;
+        case 'others':
+          _othersSelected = value ?? false;
+          if (_othersSelected) {
+            _otherSourceFocusNode.requestFocus();
+          }
+          break;
+      }
+      _validateForm();
+    });
+  }
+
+  @override
   void dispose() {
+    _otherSourceController.removeListener(_validateForm);
     _otherSourceController.dispose();
     _otherSourceFocusNode.dispose();
     super.dispose();
@@ -152,48 +202,35 @@ class _QuestionsState extends State<Questions> {
                                 title: Text('Facebook'),
                                 value: _facebookSelected,
                                 onChanged: (bool? value) {
-                                  setState(() {
-                                    _facebookSelected = value ?? false;
-                                  });
+                                  _updateCheckboxState('facebook', value);
                                 },
                               ),
                               CheckboxListTile(
                                 title: Text('Instagram'),
                                 value: _instagramSelected,
                                 onChanged: (bool? value) {
-                                  setState(() {
-                                    _instagramSelected = value ?? false;
-                                  });
+                                  _updateCheckboxState('instagram', value);
                                 },
                               ),
                               CheckboxListTile(
                                 title: Text('A friend or relative'),
                                 value: _friendSelected,
                                 onChanged: (bool? value) {
-                                  setState(() {
-                                    _friendSelected = value ?? false;
-                                  });
+                                  _updateCheckboxState('friend', value);
                                 },
                               ),
                               CheckboxListTile(
                                 title: Text('Tales Website'),
                                 value: _websiteSelected,
                                 onChanged: (bool? value) {
-                                  setState(() {
-                                    _websiteSelected = value ?? false;
-                                  });
+                                  _updateCheckboxState('website', value);
                                 },
                               ),
                               CheckboxListTile(
                                 title: Text('Others'),
                                 value: _othersSelected,
                                 onChanged: (bool? value) {
-                                  setState(() {
-                                    _othersSelected = value ?? false;
-                                    if (_othersSelected) {
-                                      _otherSourceFocusNode.requestFocus();
-                                    }
-                                  });
+                                  _updateCheckboxState('others', value);
                                 },
                               ),
                               if (_othersSelected)

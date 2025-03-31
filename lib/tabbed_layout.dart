@@ -3,172 +3,118 @@ import 'package:svsflutterui/Student.dart';
 import 'package:svsflutterui/Parent.dart';
 import 'package:svsflutterui/Questions.dart';
 
-class TabbedLayout extends StatefulWidget {
-  const TabbedLayout({super.key});
+class TabbedLayout extends StatelessWidget {
+  final TabController tabController;
+  final Function(int, bool) onValidationChanged;
+  final int selectedIndex;
 
-  @override
-  State<TabbedLayout> createState() => _TabbedLayoutState();
-}
-
-class _TabbedLayoutState extends State<TabbedLayout>
-    with SingleTickerProviderStateMixin {
-  late TabController _tabController;
-  int _selectedIndex = 0;
-
-  @override
-  void initState() {
-    super.initState();
-    _tabController = TabController(length: 5, vsync: this);
-    _tabController.addListener(() {
-      setState(() {
-        _selectedIndex = _tabController.index;
-      });
-    });
-  }
-
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
-  }
+  const TabbedLayout({
+    super.key,
+    required this.tabController,
+    required this.onValidationChanged,
+    required this.selectedIndex,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: PreferredSize(
-        preferredSize: Size.fromHeight(72),
-        child: Column(
-          children: [
-            Padding(
-              padding: EdgeInsetsDirectional.fromSTEB(16, 16, 16, 0),
-              child: TabBar(
-                controller: _tabController,
-                isScrollable: true,
-                labelColor: Theme.of(context).colorScheme.primary,
-                unselectedLabelColor:
-                    Theme.of(context).colorScheme.onSurfaceVariant,
-                labelStyle: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontFamily: 'Inter',
-                      letterSpacing: 0.0,
-                    ),
-                unselectedLabelStyle:
-                    Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontFamily: 'Inter',
-                          letterSpacing: 0.0,
-                        ),
-                indicatorColor: Theme.of(context).colorScheme.primary,
-                indicatorWeight: 3,
-                tabs: [
-                  Tab(
-                    text: 'Student',
-                  ),
-                  Tab(
-                    text: 'Parent',
-                  ),
-                  Tab(
-                    text: 'Profession',
-                  ),
-                  Tab(
-                    text: 'Questions',
-                  ),
-                  Tab(
-                    text: 'Billing',
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-      body: Stack(
-        children: [
-          TabBarView(
-            controller: _tabController,
-            children: [
-              // Student Tab
-              SingleChildScrollView(
-                child: SizedBox(
-                  height: MediaQuery.of(context).size.height * 0.7,
-                  child: StudentProfile(),
-                ),
-              ),
-              // Parent Tab
-              SingleChildScrollView(
-                child: SizedBox(
-                  height: MediaQuery.of(context).size.height * 0.7,
-                  child: ParentProfile(),
-                ),
-              ),
-              // Profession Tab
-              SingleChildScrollView(
-                child: SizedBox(
-                  height: MediaQuery.of(context).size.height * 0.7,
-                  child: Center(child: Text('Professional Information')),
-                ),
-              ),
-              // Questions Tab
-              SingleChildScrollView(
-                child: SizedBox(
-                  height: MediaQuery.of(context).size.height * 0.7,
-                  child: Questions(),
-                ),
-              ),
-              // Billing Tab
-              SingleChildScrollView(
-                child: SizedBox(
-                  height: MediaQuery.of(context).size.height * 0.7,
-                  child: Center(child: Text('Billing Information')),
-                ),
-              ),
-            ],
-          ),
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
+    return TabBarView(
+      controller: tabController,
+      physics: NeverScrollableScrollPhysics(),
+      children: [
+        // Student Tab
+        KeepAliveWrapper(
+          child: SingleChildScrollView(
             child: Container(
-              padding: EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Theme.of(context).scaffoldBackgroundColor,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 4,
-                    offset: Offset(0, -2),
-                  ),
-                ],
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  TextButton(
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                    },
-                    child: Text('Cancel'),
-                  ),
-                  SizedBox(width: 16),
-                  ElevatedButton(
-                    onPressed: () {
-                      // Handle save based on current tab
-                      switch (_selectedIndex) {
-                        case 0: // Student tab
-                          // Trigger student form validation
-                          break;
-                        case 1: // Parent tab
-                          // Trigger parent form validation
-                          break;
-                        // Add cases for other tabs
-                      }
-                    },
-                    child: Text('Save'),
-                  ),
-                ],
+              color: Colors.transparent,
+              child: SizedBox(
+                height: MediaQuery.of(context).size.height * 0.8,
+                child: StudentProfile(
+                  onValidationChanged: (isValid) =>
+                      onValidationChanged(0, isValid),
+                ),
               ),
             ),
           ),
-        ],
-      ),
+        ),
+        // Parent Tab
+        KeepAliveWrapper(
+          child: SingleChildScrollView(
+            child: Container(
+              color: Colors.transparent,
+              child: SizedBox(
+                height: MediaQuery.of(context).size.height * 0.8,
+                child: ParentProfile(
+                  onValidationChanged: (isValid) =>
+                      onValidationChanged(1, isValid),
+                ),
+              ),
+            ),
+          ),
+        ),
+        // Profession Tab
+        KeepAliveWrapper(
+          child: SingleChildScrollView(
+            child: Container(
+              color: Colors.transparent,
+              child: SizedBox(
+                height: MediaQuery.of(context).size.height * 0.8,
+                child: Center(child: Text('Professional Information')),
+              ),
+            ),
+          ),
+        ),
+        // Questions Tab
+        KeepAliveWrapper(
+          child: SingleChildScrollView(
+            child: Container(
+              color: Colors.transparent,
+              child: SizedBox(
+                height: MediaQuery.of(context).size.height * 0.8,
+                child: Questions(
+                  onValidationChanged: (isValid) =>
+                      onValidationChanged(3, isValid),
+                ),
+              ),
+            ),
+          ),
+        ),
+        // Billing Tab
+        KeepAliveWrapper(
+          child: SingleChildScrollView(
+            child: Container(
+              color: Colors.transparent,
+              child: SizedBox(
+                height: MediaQuery.of(context).size.height * 0.8,
+                child: Center(child: Text('Billing Information')),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
+}
+
+class KeepAliveWrapper extends StatefulWidget {
+  final Widget child;
+
+  const KeepAliveWrapper({
+    super.key,
+    required this.child,
+  });
+
+  @override
+  State<KeepAliveWrapper> createState() => _KeepAliveWrapperState();
+}
+
+class _KeepAliveWrapperState extends State<KeepAliveWrapper>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  Widget build(BuildContext context) {
+    super.build(context); // Don't forget this!
+    return widget.child;
+  }
+
+  @override
+  bool get wantKeepAlive => true;
 }

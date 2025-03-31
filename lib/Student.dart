@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
 
 class StudentProfile extends StatefulWidget {
-  const StudentProfile({super.key});
+  final Function(bool) onValidationChanged;
+
+  const StudentProfile({
+    super.key,
+    required this.onValidationChanged,
+  });
 
   @override
   State<StudentProfile> createState() => _StudentProfileState();
@@ -20,7 +25,34 @@ class _StudentProfileState extends State<StudentProfile> {
   DateTime? _selectedDate;
 
   @override
+  void initState() {
+    super.initState();
+    // Add listeners to all text controllers
+    _textController1.addListener(_validateForm);
+    _textController2.addListener(_validateForm);
+    _textController3.addListener(_validateForm);
+    _textController4.addListener(_validateForm);
+    _nickNameController.addListener(_validateForm);
+    _schoolController.addListener(_validateForm);
+    _otherInfoController.addListener(_validateForm);
+  }
+
+  void _validateForm() {
+    if (_formKey.currentState != null) {
+      final isValid = _formKey.currentState!.validate();
+      widget.onValidationChanged(isValid);
+    }
+  }
+
+  @override
   void dispose() {
+    _textController1.removeListener(_validateForm);
+    _textController2.removeListener(_validateForm);
+    _textController3.removeListener(_validateForm);
+    _textController4.removeListener(_validateForm);
+    _nickNameController.removeListener(_validateForm);
+    _schoolController.removeListener(_validateForm);
+    _otherInfoController.removeListener(_validateForm);
     _textController1.dispose();
     _textController2.dispose();
     _textController3.dispose();
