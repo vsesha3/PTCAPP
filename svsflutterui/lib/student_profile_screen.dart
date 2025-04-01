@@ -14,9 +14,9 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
   int _selectedIndex = 0;
   bool _isStudentValid = false;
   bool _isParentValid = false;
-  bool _isProfessionValid = false;
+  final bool _isProfessionValid = false;
   bool _isQuestionsValid = false;
-  bool _isBillingValid = false;
+  final bool _isBillingValid = false;
 
   bool get _isFormValid =>
       _isStudentValid && _isParentValid && _isQuestionsValid;
@@ -80,7 +80,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
             indicatorColor: Colors.black,
             indicatorWeight: 3,
             dividerColor: Colors.transparent,
-            overlayColor: MaterialStateProperty.all(Colors.transparent),
+            overlayColor: WidgetStateProperty.all(Colors.transparent),
             splashFactory: NoSplash.splashFactory,
             tabs: [
               Tab(text: 'Student'),
