@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 
 class Questions extends StatefulWidget {
   final Function(bool) onValidationChanged;
+  final Function(Map<String, dynamic>)? onDataChanged;
 
   const Questions({
     super.key,
     required this.onValidationChanged,
+    this.onDataChanged,
   });
 
   @override
@@ -24,36 +26,16 @@ class _QuestionsState extends State<Questions> {
   bool _websiteSelected = false;
   bool _othersSelected = false;
 
-  // Checkbox states for branch selection
-  bool _bakhundoleSelected = false;
-  bool _gairidharaSelected = false;
-
-  // Workshop selection states
-  final Map<String, bool> _workshopSelections = {
-    'Basic Grooming Workshop': false,
-    'Advanced Grooming Workshop': false,
-    'Pet Styling Workshop': false,
-    'Pet Care Workshop': false,
-    'Business Management Workshop': false,
-  };
-
-  // Getter for selected workshops
-  List<String> get selectedWorkshops => _workshopSelections.entries
-      .where((entry) => entry.value)
-      .map((entry) => entry.key)
-      .toList();
-
-  // Getter for display text
-  String get workshopDisplayText {
-    if (selectedWorkshops.isEmpty) return 'Select workshops';
-    if (selectedWorkshops.length == 1) return selectedWorkshops.first;
-    return '${selectedWorkshops.length} workshops selected';
-  }
-
   @override
   void initState() {
     super.initState();
-    _otherSourceController.addListener(_validateForm);
+    _otherSourceController.addListener(() {
+      _validateForm();
+      _updateFormData();
+    });
+
+    // Initial validation
+    _validateForm();
   }
 
   void _validateForm() {
@@ -68,30 +50,16 @@ class _QuestionsState extends State<Questions> {
     }
   }
 
-  void _updateCheckboxState(String checkbox, bool? value) {
-    setState(() {
-      switch (checkbox) {
-        case 'facebook':
-          _facebookSelected = value ?? false;
-          break;
-        case 'instagram':
-          _instagramSelected = value ?? false;
-          break;
-        case 'friend':
-          _friendSelected = value ?? false;
-          break;
-        case 'website':
-          _websiteSelected = value ?? false;
-          break;
-        case 'others':
-          _othersSelected = value ?? false;
-          if (_othersSelected) {
-            _otherSourceFocusNode.requestFocus();
-          }
-          break;
-      }
-      _validateForm();
-    });
+  void _updateFormData() {
+    if (widget.onDataChanged != null) {
+      widget.onDataChanged!({
+        'facebook': _facebookSelected,
+        'instagram': _instagramSelected,
+        'friend': _friendSelected,
+        'website': _websiteSelected,
+        'others': _othersSelected ? _otherSourceController.text : null,
+      });
+    }
   }
 
   @override
@@ -142,21 +110,25 @@ class _QuestionsState extends State<Questions> {
                       ],
                     ),
                   ),
-                  Row(
-                    mainAxisSize: MainAxisSize.max,
-                    children: [
-                      Text(
-                        'Please answer the following questions',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              fontFamily: 'Inter',
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onSurfaceVariant,
-                              fontSize: 14,
-                              letterSpacing: 0.0,
-                            ),
-                      ),
-                    ],
+                  Padding(
+                    padding: EdgeInsetsDirectional.fromSTEB(0, 0, 0, 4),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.max,
+                      children: [
+                        Text(
+                          'Please answer the following questions',
+                          style:
+                              Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    fontFamily: 'Inter',
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onSurfaceVariant,
+                                    fontSize: 14,
+                                    letterSpacing: 0.0,
+                                  ),
+                        ),
+                      ],
+                    ),
                   ),
                   Padding(
                     padding: EdgeInsetsDirectional.fromSTEB(0, 8, 0, 8),
@@ -199,38 +171,62 @@ class _QuestionsState extends State<Questions> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               CheckboxListTile(
-                                title: Text('Facebook'),
+                                title: const Text('Facebook'),
                                 value: _facebookSelected,
                                 onChanged: (bool? value) {
-                                  _updateCheckboxState('facebook', value);
+                                  setState(() {
+                                    _facebookSelected = value ?? false;
+                                    _updateFormData();
+                                  });
+                                  _validateForm();
                                 },
                               ),
                               CheckboxListTile(
-                                title: Text('Instagram'),
+                                title: const Text('Instagram'),
                                 value: _instagramSelected,
                                 onChanged: (bool? value) {
-                                  _updateCheckboxState('instagram', value);
+                                  setState(() {
+                                    _instagramSelected = value ?? false;
+                                    _updateFormData();
+                                  });
+                                  _validateForm();
                                 },
                               ),
                               CheckboxListTile(
-                                title: Text('A friend or relative'),
+                                title: const Text('A friend or relative'),
                                 value: _friendSelected,
                                 onChanged: (bool? value) {
-                                  _updateCheckboxState('friend', value);
+                                  setState(() {
+                                    _friendSelected = value ?? false;
+                                    _updateFormData();
+                                  });
+                                  _validateForm();
                                 },
                               ),
                               CheckboxListTile(
-                                title: Text('Tales Website'),
+                                title: const Text('Tales Website'),
                                 value: _websiteSelected,
                                 onChanged: (bool? value) {
-                                  _updateCheckboxState('website', value);
+                                  setState(() {
+                                    _websiteSelected = value ?? false;
+                                    _updateFormData();
+                                  });
+                                  _validateForm();
                                 },
                               ),
                               CheckboxListTile(
-                                title: Text('Others'),
+                                title: const Text('Others'),
                                 value: _othersSelected,
                                 onChanged: (bool? value) {
-                                  _updateCheckboxState('others', value);
+                                  setState(() {
+                                    _othersSelected = value ?? false;
+                                    if (_othersSelected) {
+                                      FocusScope.of(context)
+                                          .requestFocus(_otherSourceFocusNode);
+                                    }
+                                    _updateFormData();
+                                  });
+                                  _validateForm();
                                 },
                               ),
                               if (_othersSelected)
@@ -266,181 +262,6 @@ class _QuestionsState extends State<Questions> {
                             ],
                           ),
                         ),
-                      ],
-                    ),
-                  ),
-                  Padding(
-                    padding: EdgeInsetsDirectional.fromSTEB(0, 8, 0, 8),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.max,
-                      children: [
-                        Expanded(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.max,
-                            children: [
-                              Divider(
-                                thickness: 2,
-                                color: Theme.of(context).colorScheme.outline,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Padding(
-                    padding: EdgeInsetsDirectional.fromSTEB(0, 8, 0, 0),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.max,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Which branch of Grooming tales are you joining? *',
-                          style:
-                              Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                    fontFamily: 'Inter',
-                                    letterSpacing: 0.0,
-                                    color: Theme.of(context).colorScheme.error,
-                                  ),
-                        ),
-                        Padding(
-                          padding: EdgeInsetsDirectional.fromSTEB(0, 8, 0, 0),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.max,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              CheckboxListTile(
-                                title: Text(
-                                    'Grooming tales, Bakhundole, Lalitpur'),
-                                value: _bakhundoleSelected,
-                                onChanged: (bool? value) {
-                                  setState(() {
-                                    _bakhundoleSelected = value ?? false;
-                                    if (_bakhundoleSelected) {
-                                      _gairidharaSelected = false;
-                                    }
-                                  });
-                                },
-                              ),
-                              CheckboxListTile(
-                                title: Text(
-                                    'Grooming tales, Gairidhara, Kathmandu'),
-                                value: _gairidharaSelected,
-                                onChanged: (bool? value) {
-                                  setState(() {
-                                    _gairidharaSelected = value ?? false;
-                                    if (_gairidharaSelected) {
-                                      _bakhundoleSelected = false;
-                                    }
-                                  });
-                                },
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Padding(
-                    padding: EdgeInsetsDirectional.fromSTEB(0, 8, 0, 8),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.max,
-                      children: [
-                        Expanded(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.max,
-                            children: [
-                              Divider(
-                                thickness: 2,
-                                color: Theme.of(context).colorScheme.outline,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Padding(
-                    padding: EdgeInsetsDirectional.fromSTEB(0, 8, 0, 0),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.max,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Workshops you want to join? *',
-                          style:
-                              Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                    fontFamily: 'Inter',
-                                    letterSpacing: 0.0,
-                                    color: Theme.of(context).colorScheme.error,
-                                  ),
-                        ),
-                        Padding(
-                          padding: EdgeInsetsDirectional.fromSTEB(0, 8, 0, 0),
-                          child: PopupMenuButton<String>(
-                            child: Container(
-                              padding: EdgeInsets.symmetric(
-                                  horizontal: 12, vertical: 8),
-                              decoration: BoxDecoration(
-                                border: Border.all(
-                                  color: Theme.of(context).colorScheme.outline,
-                                  width: 2,
-                                ),
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    workshopDisplayText,
-                                    style:
-                                        Theme.of(context).textTheme.bodyMedium,
-                                  ),
-                                  Icon(Icons.arrow_drop_down),
-                                ],
-                              ),
-                            ),
-                            itemBuilder: (BuildContext context) {
-                              return _workshopSelections.entries.map((entry) {
-                                return PopupMenuItem<String>(
-                                  value: entry.key,
-                                  child: Row(
-                                    children: [
-                                      Checkbox(
-                                        value: entry.value,
-                                        onChanged: (bool? value) {
-                                          setState(() {
-                                            _workshopSelections[entry.key] =
-                                                value ?? false;
-                                          });
-                                        },
-                                      ),
-                                      SizedBox(width: 8),
-                                      Text(entry.key),
-                                    ],
-                                  ),
-                                );
-                              }).toList();
-                            },
-                            onSelected: (String value) {
-                              // Handle selection if needed
-                            },
-                          ),
-                        ),
-                        if (selectedWorkshops.isEmpty)
-                          Padding(
-                            padding: EdgeInsetsDirectional.fromSTEB(0, 4, 0, 0),
-                            child: Text(
-                              'Please select at least one workshop',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodySmall
-                                  ?.copyWith(
-                                    color: Theme.of(context).colorScheme.error,
-                                  ),
-                            ),
-                          ),
                       ],
                     ),
                   ),

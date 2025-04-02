@@ -1,0 +1,29 @@
+{
+  "workshops": [
+    {
+      "id": "1",
+      "name": "Workshop 1",
+      "description": "First Workshop Description"
+    },
+    {
+      "id": "2",
+      "name": "Workshop 2",
+      "description": "Second Workshop Description"
+    },
+    {
+      "id": "3",
+      "name": "Workshop 3",
+      "description": "Third Workshop Description"
+    },
+    {
+      "id": "4",
+      "name": "Workshop 4",
+      "description": "Fourth Workshop Description"
+    },
+    {
+      "id": "5",
+      "name": "Workshop 5",
+      "description": "Fifth Workshop Description"
+    }
+  ]
+} 

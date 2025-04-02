@@ -19,7 +19,8 @@ class AuthProvider with ChangeNotifier {
 
   /// Login and store token in local storage
   Future<void> login(String username, String password) async {
-    _token = await ApiService().login(username, password);
+    final response = await ApiService().login(username, password);
+    _token = response['token'] as String?;
     if (_token != null) {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       await prefs.setString('auth_token', _token!);
@@ -32,6 +33,16 @@ class AuthProvider with ChangeNotifier {
     _token = null;
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.remove('auth_token');
+    notifyListeners();
+  }
+
+  void setToken(String token) {
+    _token = token;
+    notifyListeners();
+  }
+
+  void clearToken() {
+    _token = null;
     notifyListeners();
   }
 }
