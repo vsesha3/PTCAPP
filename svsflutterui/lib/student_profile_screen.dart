@@ -4,14 +4,13 @@ import 'package:svsflutterui/Student.dart';
 import 'package:svsflutterui/Parent.dart';
 import 'package:svsflutterui/Questions.dart';
 import 'package:svsflutterui/api_service.dart';
-import 'package:flutter/material.dart' show TabBar, TabBarView;
 
 class StudentProfileScreen extends StatefulWidget {
-  final Map<String, dynamic>? studentData;
+  final int? studentId;
 
   const StudentProfileScreen({
     super.key,
-    this.studentData,
+    this.studentId,
   });
 
   @override
@@ -31,6 +30,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
   final bool _isBillingValid = false;
   bool _isSaved = false;
   final bool _isSaving = false;
+  bool _isLoading = true;
 
   // Form data notifiers
   final _studentData = ValueNotifier<Map<String, dynamic>>({});
@@ -50,13 +50,51 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
       });
     });
 
-    // Initialize form data if studentData is provided
-    if (widget.studentData != null) {
-      _initializeFormData(widget.studentData!);
+    // Fetch student data if ID is provided
+    if (widget.studentId != null) {
+      _fetchStudentData();
+    } else {
+      _isLoading = false;
+    }
+  }
+
+  Future<void> _fetchStudentData() async {
+    try {
+      final response = await _apiService.getStudentDetails(widget.studentId!);
+      if (response['status'] == 200 && response['data'] != null) {
+        _initializeFormData(response['data']);
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                  response['message'] ?? 'Failed to fetch student details'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error fetching student details: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
   void _initializeFormData(Map<String, dynamic> data) {
+    print('Initializing form data: $data'); // Debug print
+
     // Initialize student data
     _studentData.value = {
       'name': data['full_name'] ?? '',
@@ -64,7 +102,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
       'school': data['school'] ?? '',
       'other_info': data['other_info'] ?? '',
       'dob': data['date_of_birth'] ?? '',
-      'age': data['age'] ?? '',
+      'age': data['age']?.toString() ?? '',
       'gender': data['gender'] ?? '',
       'branch': data['branch'] ?? '',
       'nationality': data['nationality'] ?? '',
@@ -79,7 +117,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
       'mother_social_media': data['mother_social_media'] ?? '',
       'mother_profession': data['mother_profession'] ?? '',
       'mother_date_of_birth': data['mother_date_of_birth'] ?? '',
-      'mother_age': data['mother_age'] ?? '',
+      'mother_age': data['mother_age']?.toString() ?? '',
       'mother_photo': data['mother_photo'] ?? '',
       'father_first_name': data['father_first_name'] ?? '',
       'father_contact': data['father_contact'] ?? '',
@@ -87,7 +125,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
       'father_social_media': data['father_social_media'] ?? '',
       'father_profession': data['father_profession'] ?? '',
       'father_date_of_birth': data['father_date_of_birth'] ?? '',
-      'father_age': data['father_age'] ?? '',
+      'father_age': data['father_age']?.toString() ?? '',
       'father_photo': data['father_photo'] ?? '',
       'address': data['address'] ?? '',
       'work_address': data['work_address'] ?? '',
@@ -385,149 +423,156 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
           ),
         ),
       ),
-      body: Stack(
-        children: [
-          Form(
-            key: _formKey,
-            child: TabBarView(
-              controller: _tabController,
-              physics: NeverScrollableScrollPhysics(),
+      body: _isLoading
+          ? Center(child: CircularProgressIndicator())
+          : Stack(
               children: [
-                // Student Tab
-                KeepAliveWrapper(
-                  child: SingleChildScrollView(
-                    child: Container(
-                      color: Colors.transparent,
-                      child: SizedBox(
-                        height: MediaQuery.of(context).size.height * 0.8,
-                        child: ValueListenableBuilder<Map<String, dynamic>>(
-                          valueListenable: _studentData,
-                          builder: (context, data, child) {
-                            return StudentProfile(
-                              onValidationChanged: (isValid) =>
-                                  _updateValidationState(0, isValid),
-                              onDataChanged: _updateStudentData,
-                            );
-                          },
+                Form(
+                  key: _formKey,
+                  child: TabBarView(
+                    controller: _tabController,
+                    physics: NeverScrollableScrollPhysics(),
+                    children: [
+                      // Student Tab
+                      KeepAliveWrapper(
+                        child: SingleChildScrollView(
+                          child: Container(
+                            color: Colors.transparent,
+                            child: SizedBox(
+                              height: MediaQuery.of(context).size.height * 0.8,
+                              child:
+                                  ValueListenableBuilder<Map<String, dynamic>>(
+                                valueListenable: _studentData,
+                                builder: (context, data, child) {
+                                  return StudentProfile(
+                                    onValidationChanged: (isValid) =>
+                                        _updateValidationState(0, isValid),
+                                    onDataChanged: _updateStudentData,
+                                  );
+                                },
+                              ),
+                            ),
+                          ),
                         ),
                       ),
-                    ),
-                  ),
-                ),
-                // Parent Tab
-                KeepAliveWrapper(
-                  child: SingleChildScrollView(
-                    child: Container(
-                      color: Colors.transparent,
-                      child: SizedBox(
-                        height: MediaQuery.of(context).size.height * 0.8,
-                        child: ValueListenableBuilder<Map<String, dynamic>>(
-                          valueListenable: _parentData,
-                          builder: (context, data, child) {
-                            return ParentProfile(
-                              onValidationChanged: (isValid) =>
-                                  _updateValidationState(1, isValid),
-                              onDataChanged: _updateParentData,
-                            );
-                          },
+                      // Parent Tab
+                      KeepAliveWrapper(
+                        child: SingleChildScrollView(
+                          child: Container(
+                            color: Colors.transparent,
+                            child: SizedBox(
+                              height: MediaQuery.of(context).size.height * 0.8,
+                              child:
+                                  ValueListenableBuilder<Map<String, dynamic>>(
+                                valueListenable: _parentData,
+                                builder: (context, data, child) {
+                                  return ParentProfile(
+                                    onValidationChanged: (isValid) =>
+                                        _updateValidationState(1, isValid),
+                                    onDataChanged: _updateParentData,
+                                  );
+                                },
+                              ),
+                            ),
+                          ),
                         ),
                       ),
-                    ),
-                  ),
-                ),
-                // Questions Tab
-                KeepAliveWrapper(
-                  child: SingleChildScrollView(
-                    child: Container(
-                      color: Colors.transparent,
-                      child: SizedBox(
-                        height: MediaQuery.of(context).size.height * 0.8,
-                        child: ValueListenableBuilder<Map<String, dynamic>>(
-                          valueListenable: _questionsData,
-                          builder: (context, data, child) {
-                            return Questions(
-                              onValidationChanged: (isValid) =>
-                                  _updateValidationState(2, isValid),
-                              onDataChanged: _updateQuestionsData,
-                            );
-                          },
+                      // Questions Tab
+                      KeepAliveWrapper(
+                        child: SingleChildScrollView(
+                          child: Container(
+                            color: Colors.transparent,
+                            child: SizedBox(
+                              height: MediaQuery.of(context).size.height * 0.8,
+                              child:
+                                  ValueListenableBuilder<Map<String, dynamic>>(
+                                valueListenable: _questionsData,
+                                builder: (context, data, child) {
+                                  return Questions(
+                                    onValidationChanged: (isValid) =>
+                                        _updateValidationState(2, isValid),
+                                    onDataChanged: _updateQuestionsData,
+                                  );
+                                },
+                              ),
+                            ),
+                          ),
                         ),
                       ),
-                    ),
+                      // Billing Tab
+                      KeepAliveWrapper(
+                        child: SingleChildScrollView(
+                          child: Container(
+                            color: Colors.transparent,
+                            child: SizedBox(
+                              height: MediaQuery.of(context).size.height * 0.8,
+                              child: Center(child: Text('Billing Information')),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                // Billing Tab
-                KeepAliveWrapper(
-                  child: SingleChildScrollView(
-                    child: Container(
-                      color: Colors.transparent,
-                      child: SizedBox(
-                        height: MediaQuery.of(context).size.height * 0.8,
-                        child: Center(child: Text('Billing Information')),
-                      ),
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  child: Container(
+                    padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[100],
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 4,
+                          offset: Offset(0, -2),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        TextButton(
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                          child: Text('Cancel'),
+                        ),
+                        SizedBox(width: 16),
+                        ElevatedButton(
+                          onPressed: _isFormValid ? _handleSave : null,
+                          style: ElevatedButton.styleFrom(
+                            padding: EdgeInsets.symmetric(
+                                horizontal: 24, vertical: 12),
+                            backgroundColor: _isFormValid
+                                ? Theme.of(context).colorScheme.primary
+                                : Theme.of(context)
+                                    .colorScheme
+                                    .surfaceContainerHighest,
+                            foregroundColor: _isFormValid
+                                ? Theme.of(context).colorScheme.onPrimary
+                                : Theme.of(context)
+                                    .colorScheme
+                                    .onSurfaceVariant,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          child: Text(
+                            _isSaved ? 'Update' : 'Save',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
               ],
             ),
-          ),
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: Container(
-              padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              decoration: BoxDecoration(
-                color: Colors.grey[100],
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 4,
-                    offset: Offset(0, -2),
-                  ),
-                ],
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  TextButton(
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                    },
-                    child: Text('Cancel'),
-                  ),
-                  SizedBox(width: 16),
-                  ElevatedButton(
-                    onPressed: _isFormValid ? _handleSave : null,
-                    style: ElevatedButton.styleFrom(
-                      padding:
-                          EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                      backgroundColor: _isFormValid
-                          ? Theme.of(context).colorScheme.primary
-                          : Theme.of(context)
-                              .colorScheme
-                              .surfaceContainerHighest,
-                      foregroundColor: _isFormValid
-                          ? Theme.of(context).colorScheme.onPrimary
-                          : Theme.of(context).colorScheme.onSurfaceVariant,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    child: Text(
-                      _isSaved ? 'Update' : 'Save',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

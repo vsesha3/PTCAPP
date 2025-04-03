@@ -16,7 +16,7 @@ class _StudentListScreenState extends State<StudentListScreen> {
   bool _isLoading = true;
   int _currentPage = 1;
   int _totalPages = 1;
-  int _itemsPerPage = 10;
+  final int _itemsPerPage = 10;
   final ScrollController _scrollController = ScrollController();
   Map<String, dynamic>? _selectedStudent;
   Set<int> _selectedStudentIds = {}; // Track multiple selected students
@@ -42,15 +42,32 @@ class _StudentListScreenState extends State<StudentListScreen> {
 
       if (response['status'] == 200) {
         final data = response['data'];
+
         if (data is List && data.isNotEmpty) {
-          setState(() {
-            _students = data.cast<Map<String, dynamic>>();
-            _totalPages = response['total_pages'] ?? 1;
-            print('Students data: $_students');
-          });
+          final firstItem = data[0];
+          if (firstItem is Map && firstItem.containsKey('data')) {
+            final studentsData = firstItem['data'];
+
+            if (studentsData is List && studentsData.isNotEmpty) {
+              setState(() {
+                _students = studentsData.cast<Map<String, dynamic>>();
+                _totalPages = firstItem['total_pages'] ?? 1;
+              });
+            } else {
+              setState(() {
+                _errorMessage = 'No students found';
+                _students = [];
+              });
+            }
+          } else {
+            setState(() {
+              _errorMessage = 'Invalid data format';
+              _students = [];
+            });
+          }
         } else {
           setState(() {
-            _errorMessage = 'No students found';
+            _errorMessage = 'No data received';
             _students = [];
           });
         }
@@ -132,18 +149,22 @@ class _StudentListScreenState extends State<StudentListScreen> {
   }
 
   void _showStudentForm({Map<String, dynamic>? studentData}) {
+    print('Showing student form with ID: ${studentData?['id']}'); // Debug print
     showDialog(
       context: context,
       builder: (context) => Dialog(
-        child: Container(
+        child: SizedBox(
           width: MediaQuery.of(context).size.width * 0.9,
           height: MediaQuery.of(context).size.height * 0.9,
           child: StudentProfileScreen(
-            studentData: studentData,
+            studentId: studentData?['id'],
           ),
         ),
       ),
-    ).then((_) => _loadStudents()); // Refresh list after dialog closes
+    ).then((_) {
+      print('Student form closed, refreshing list...'); // Debug print
+      _loadStudents(); // Refresh list after dialog closes
+    });
   }
 
   @override
@@ -152,6 +173,12 @@ class _StudentListScreenState extends State<StudentListScreen> {
       appBar: AppBar(
         title: Text('Students List'),
         actions: [
+          TextButton.icon(
+            icon: Icon(Icons.add),
+            label: Text('Add Student'),
+            onPressed: () => _showStudentForm(),
+          ),
+          SizedBox(width: 8),
           IconButton(
             icon: Icon(Icons.refresh),
             onPressed: () {
@@ -168,9 +195,6 @@ class _StudentListScreenState extends State<StudentListScreen> {
             icon: Icon(Icons.more_vert),
             onSelected: (value) {
               switch (value) {
-                case 'new':
-                  _showStudentForm();
-                  break;
                 case 'edit':
                   if (_selectedStudent != null) {
                     _showStudentForm(studentData: _selectedStudent);
@@ -187,16 +211,6 @@ class _StudentListScreenState extends State<StudentListScreen> {
               }
             },
             itemBuilder: (context) => [
-              PopupMenuItem(
-                value: 'new',
-                child: Row(
-                  children: [
-                    Icon(Icons.add),
-                    SizedBox(width: 8),
-                    Text('New Student'),
-                  ],
-                ),
-              ),
               PopupMenuItem(
                 value: 'edit',
                 enabled: _selectedStudent != null,
@@ -225,79 +239,42 @@ class _StudentListScreenState extends State<StudentListScreen> {
       ),
       body: _isLoading
           ? Center(child: CircularProgressIndicator())
-          : Column(
-              children: [
-                // Menu Bar
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 4,
-                        offset: Offset(0, 2),
+          : Container(
+              color: Colors.white,
+              child: Column(
+                children: [
+                  // Table or List View
+                  Expanded(
+                    child: Padding(
+                      padding: EdgeInsets.only(top: 16),
+                      child: LayoutBuilder(
+                        builder: (context, constraints) {
+                          if (constraints.maxWidth < 600) {
+                            return _buildMobileView();
+                          } else {
+                            return _buildDesktopView();
+                          }
+                        },
                       ),
-                    ],
+                    ),
                   ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        '${_selectedStudentIds.length} students selected',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: _selectedStudentIds.isNotEmpty
-                              ? Theme.of(context).primaryColor
-                              : Colors.grey,
+                  // Pagination controls
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 4,
+                          offset: Offset(0, -2),
                         ),
-                      ),
-                      Row(
-                        children: [
-                          TextButton.icon(
-                            icon: Icon(Icons.add),
-                            label: Text('Add Student'),
-                            onPressed: () => _showStudentForm(),
-                          ),
-                          SizedBox(width: 16),
-                          TextButton.icon(
-                            icon: Icon(Icons.edit),
-                            label: Text('Edit Selected'),
-                            onPressed: _selectedStudent != null
-                                ? () => _showStudentForm(
-                                    studentData: _selectedStudent)
-                                : null,
-                          ),
-                          SizedBox(width: 16),
-                          TextButton.icon(
-                            icon: Icon(Icons.delete, color: Colors.red),
-                            label: Text('Delete Selected',
-                                style: TextStyle(color: Colors.red)),
-                            onPressed: _selectedStudentIds.isNotEmpty
-                                ? () => _showDeleteConfirmation(
-                                    _selectedStudentIds.first,
-                                    '${_selectedStudentIds.length} students')
-                                : null,
-                          ),
-                        ],
-                      ),
-                    ],
+                      ],
+                    ),
+                    child: _buildPaginationControls(),
                   ),
-                ),
-                // Table or List View
-                Expanded(
-                  child: LayoutBuilder(
-                    builder: (context, constraints) {
-                      if (constraints.maxWidth < 600) {
-                        return _buildMobileView();
-                      } else {
-                        return _buildDesktopView();
-                      }
-                    },
-                  ),
-                ),
-                _buildPaginationControls(),
-              ],
+                ],
+              ),
             ),
     );
   }
@@ -337,18 +314,10 @@ class _StudentListScreenState extends State<StudentListScreen> {
               'Mother: ${student['mother_first_name'] ?? ''}\n'
               'Father: ${student['father_first_name'] ?? ''}',
             ),
-            trailing: CircleAvatar(
-              radius: 25,
-              backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-              backgroundImage: student['photograph'] != null &&
-                      student['photograph'].toString().isNotEmpty
-                  ? MemoryImage(base64Decode(student['photograph']))
-                  : null,
-              child: student['photograph'] == null ||
-                      student['photograph'].toString().isEmpty
-                  ? Icon(Icons.person,
-                      color: Theme.of(context).colorScheme.onPrimaryContainer)
-                  : null,
+            trailing: Icon(
+              Icons.image,
+              size: 30,
+              color: Theme.of(context).colorScheme.primary,
             ),
           ),
         );
@@ -360,118 +329,139 @@ class _StudentListScreenState extends State<StudentListScreen> {
     return SingleChildScrollView(
       controller: _scrollController,
       child: DataTable(
+        headingRowColor: MaterialStateProperty.all(Colors.grey[100]),
         columns: [
           DataColumn(
-            label: Checkbox(
-              value: _selectedStudentIds.length == _students.length,
-              onChanged: (value) {
-                setState(() {
-                  if (value == true) {
-                    _selectedStudentIds = Set.from(
-                        _students.map((student) => student['id'] as int));
-                  } else {
-                    _selectedStudentIds.clear();
-                  }
-                  _selectedStudent = null;
-                });
-              },
+            label: Icon(
+              Icons.image,
+              color: Theme.of(context).colorScheme.primary,
             ),
           ),
-          DataColumn(label: Text('Photo')),
-          DataColumn(label: Text('Full Name')),
-          DataColumn(label: Text('Age')),
-          DataColumn(label: Text('Mother\'s Name')),
-          DataColumn(label: Text('Father\'s Name')),
-          DataColumn(label: Text('Contact')),
-          DataColumn(label: Text('Actions')),
+          DataColumn(
+            label: Text('Full Name',
+                style: TextStyle(fontWeight: FontWeight.bold)),
+          ),
+          DataColumn(
+            label: Text('Age', style: TextStyle(fontWeight: FontWeight.bold)),
+          ),
+          DataColumn(
+            label: Text('Mother\'s Name',
+                style: TextStyle(fontWeight: FontWeight.bold)),
+          ),
+          DataColumn(
+            label: Text('Father\'s Name',
+                style: TextStyle(fontWeight: FontWeight.bold)),
+          ),
+          DataColumn(
+            label:
+                Text('Contact', style: TextStyle(fontWeight: FontWeight.bold)),
+          ),
+          DataColumn(
+            label:
+                Text('Actions', style: TextStyle(fontWeight: FontWeight.bold)),
+          ),
         ],
-        rows: _students.map((student) {
-          final isSelected = _selectedStudentIds.contains(student['id']);
-          return DataRow(
-            selected: isSelected,
-            onSelectChanged: (selected) {
-              setState(() {
-                if (selected == true) {
-                  _selectedStudentIds.add(student['id']);
-                  _selectedStudent = student;
-                } else {
-                  _selectedStudentIds.remove(student['id']);
-                  if (_selectedStudentIds.length == 1) {
-                    _selectedStudent = _students.firstWhere(
-                        (s) => s['id'] == _selectedStudentIds.first);
+        rows: [
+          ..._students.map((student) {
+            final isSelected = _selectedStudentIds.contains(student['id']);
+            return DataRow(
+              selected: isSelected,
+              onSelectChanged: (selected) {
+                setState(() {
+                  if (selected == true) {
+                    _selectedStudentIds.add(student['id']);
+                    _selectedStudent = student;
                   } else {
-                    _selectedStudent = null;
+                    _selectedStudentIds.remove(student['id']);
+                    if (_selectedStudentIds.length == 1) {
+                      _selectedStudent = _students.firstWhere(
+                          (s) => s['id'] == _selectedStudentIds.first);
+                    } else {
+                      _selectedStudent = null;
+                    }
                   }
-                }
-              });
-            },
-            cells: [
-              DataCell(
-                Checkbox(
-                  value: isSelected,
-                  onChanged: (value) {
-                    setState(() {
-                      if (value == true) {
-                        _selectedStudentIds.add(student['id']);
-                        _selectedStudent = student;
-                      } else {
-                        _selectedStudentIds.remove(student['id']);
-                        if (_selectedStudentIds.length == 1) {
-                          _selectedStudent = _students.firstWhere(
-                              (s) => s['id'] == _selectedStudentIds.first);
-                        } else {
-                          _selectedStudent = null;
-                        }
-                      }
-                    });
-                  },
+                });
+              },
+              cells: [
+                DataCell(
+                  Icon(
+                    Icons.image,
+                    size: 30,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
                 ),
-              ),
-              DataCell(
-                CircleAvatar(
-                  radius: 20,
-                  backgroundColor:
-                      Theme.of(context).colorScheme.primaryContainer,
-                  backgroundImage: student['photograph'] != null &&
-                          student['photograph'].toString().isNotEmpty
-                      ? MemoryImage(base64Decode(student['photograph']))
-                      : null,
-                  child: student['photograph'] == null ||
-                          student['photograph'].toString().isEmpty
-                      ? Icon(Icons.person,
-                          color:
-                              Theme.of(context).colorScheme.onPrimaryContainer)
-                      : null,
-                ),
-              ),
-              DataCell(Text(student['full_name'] ?? '')),
-              DataCell(Text(student['age']?.toString() ?? '')),
-              DataCell(Text(student['mother_first_name'] ?? '')),
-              DataCell(Text(student['father_first_name'] ?? '')),
-              DataCell(Text(student['mother_contact'] ??
-                  student['father_contact'] ??
-                  '')),
-              DataCell(
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    IconButton(
-                      icon: Icon(Icons.edit),
-                      onPressed: () => _showStudentForm(studentData: student),
-                    ),
-                    IconButton(
-                      icon: Icon(Icons.delete, color: Colors.red),
-                      onPressed: () => _showDeleteConfirmation(
-                        student['id'],
-                        student['full_name'] ?? 'Unknown Student',
+                DataCell(Text(student['full_name'] ?? '')),
+                DataCell(Text(student['age']?.toString() ?? '')),
+                DataCell(Text(student['mother_first_name'] ?? '')),
+                DataCell(Text(student['father_first_name'] ?? '')),
+                DataCell(Text(student['mother_contact'] ??
+                    student['father_contact'] ??
+                    '')),
+                DataCell(
+                  PopupMenuButton<String>(
+                    icon: Icon(Icons.more_vert),
+                    itemBuilder: (context) => [
+                      PopupMenuItem(
+                        value: 'edit',
+                        child: Row(
+                          children: [
+                            Icon(Icons.edit),
+                            SizedBox(width: 8),
+                            Text('Edit'),
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
+                      PopupMenuItem(
+                        value: 'delete',
+                        child: Row(
+                          children: [
+                            Icon(Icons.delete, color: Colors.red),
+                            SizedBox(width: 8),
+                            Text('Delete', style: TextStyle(color: Colors.red)),
+                          ],
+                        ),
+                      ),
+                    ],
+                    onSelected: (value) {
+                      switch (value) {
+                        case 'edit':
+                          _showStudentForm(studentData: student);
+                          break;
+                        case 'delete':
+                          _showDeleteConfirmation(
+                            student['id'],
+                            student['full_name'] ?? 'Unknown Student',
+                          );
+                          break;
+                      }
+                    },
+                  ),
                 ),
-              ),
-            ],
-          );
-        }).toList(),
+              ],
+            );
+          }).toList(),
+          if (_selectedStudentIds.isNotEmpty)
+            DataRow(
+              color: MaterialStateProperty.all(Colors.grey[50]),
+              cells: [
+                DataCell(
+                  Text(
+                    '${_selectedStudentIds.length} selected',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).primaryColor,
+                    ),
+                  ),
+                ),
+                DataCell(Text('')),
+                DataCell(Text('')),
+                DataCell(Text('')),
+                DataCell(Text('')),
+                DataCell(Text('')),
+                DataCell(Text('')),
+              ],
+            ),
+        ],
       ),
     );
   }

@@ -436,4 +436,44 @@ class ApiService {
       };
     }
   }
+
+  Future<Map<String, dynamic>> getStudentDetails(int studentId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/getStudentDetails?id=$studentId'),
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      print('Student Details Response Status: ${response.statusCode}');
+      print('Student Details Response Body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        if (data['success'] == true) {
+          return {
+            'status': 200,
+            'data': data['data'],
+            'message':
+                data['message'] ?? 'Student details fetched successfully',
+          };
+        } else {
+          return {
+            'status': response.statusCode,
+            'message': data['message'] ?? 'Failed to fetch student details',
+          };
+        }
+      } else {
+        return {
+          'status': response.statusCode,
+          'message': 'Failed to fetch student details',
+        };
+      }
+    } catch (e) {
+      print('Error fetching student details: $e');
+      return {
+        'status': 500,
+        'message': 'Error fetching student details: $e',
+      };
+    }
+  }
 }
