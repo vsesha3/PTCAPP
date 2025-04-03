@@ -1,15 +1,22 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/foundation.dart';
 
 class ApiService {
   // Static URL constants
-  static const String baseUrl =
-      'http://localhost:5000/api'; // Replace with your Python backend URL
-  static const String loginUrl = '$baseUrl/login';
-  static const String studentUrl = '$baseUrl/saveStudentData';
-  static const String parentUrl = '$baseUrl/parent';
-  static const String questionsUrl = '$baseUrl/questions';
+  static String get baseUrl {
+    if (kDebugMode) {
+      return 'http://localhost:5000/api'; // Local development
+    } else {
+      return '/api'; // Production with Nginx proxy
+    }
+  }
+
+  static String get loginUrl => '$baseUrl/login';
+  static String get studentUrl => '$baseUrl/saveStudentData';
+  static String get parentUrl => '$baseUrl/parent';
+  static String get questionsUrl => '$baseUrl/questions';
 
   SharedPreferences? _prefs;
   bool _isInitialized = false;

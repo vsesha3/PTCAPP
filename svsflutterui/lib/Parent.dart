@@ -150,22 +150,27 @@ class _ParentProfileState extends State<ParentProfile> {
         isValid = false;
       }
 
-      // Check if at least one address is provided
-      if (_addressController.text.isEmpty &&
-          _workAddressController.text.isEmpty) {
-        isValid = false;
-      }
-
       // Check if at least one contact is provided
       if (_motherContactController.text.isEmpty &&
           _fatherContactController.text.isEmpty) {
         isValid = false;
       }
 
+      // Check if at least one address is provided
+      if (_addressController.text.isEmpty &&
+          _workAddressController.text.isEmpty) {
+        isValid = false;
+      }
+
+      // Check if emergency contact is provided
+      if (_emergencyContactController.text.isEmpty) {
+        isValid = false;
+      }
+
       // Validate the form state
       isValid = isValid && _formKey.currentState!.validate();
 
-      // Notify parent about validation state
+      // Call the validation callback
       widget.onValidationChanged(isValid);
     }
   }
@@ -196,15 +201,17 @@ class _ParentProfileState extends State<ParentProfile> {
         if (isMother) {
           _motherDateOfBirth = picked;
           _motherDateOfBirthController.text =
-              "${picked.day}/${picked.month}/${picked.year}";
+              "${picked.day.toString().padLeft(2, '0')}-${picked.month.toString().padLeft(2, '0')}-${picked.year}";
           _calculateAge(picked, _motherAgeController);
         } else {
           _fatherDateOfBirth = picked;
           _fatherDateOfBirthController.text =
-              "${picked.day}/${picked.month}/${picked.year}";
+              "${picked.day.toString().padLeft(2, '0')}-${picked.month.toString().padLeft(2, '0')}-${picked.year}";
           _calculateAge(picked, _fatherAgeController);
         }
       });
+      _validateForm();
+      _updateFormData();
     }
   }
 
@@ -575,7 +582,7 @@ class _ParentProfileState extends State<ParentProfile> {
                                                           context, true),
                                                       decoration:
                                                           InputDecoration(
-                                                        hintText: 'DD/MM/YYYY',
+                                                        hintText: 'DD-MM-YYYY',
                                                         suffixIcon: IconButton(
                                                           icon: Icon(Icons
                                                               .calendar_today),
@@ -904,7 +911,7 @@ class _ParentProfileState extends State<ParentProfile> {
                                                           context, false),
                                                       decoration:
                                                           InputDecoration(
-                                                        hintText: 'DD/MM/YYYY',
+                                                        hintText: 'DD-MM-YYYY',
                                                         suffixIcon: IconButton(
                                                           icon: Icon(Icons
                                                               .calendar_today),
@@ -1287,7 +1294,7 @@ class _ParentProfileState extends State<ParentProfile> {
 
   void _updateFormData() {
     if (widget.onDataChanged != null) {
-      widget.onDataChanged!({
+      final data = {
         'mother_first_name': _motherFirstNameController.text,
         'mother_contact': _motherContactController.text,
         'mother_email': _motherEmailController.text,
@@ -1307,7 +1314,11 @@ class _ParentProfileState extends State<ParentProfile> {
         'address': _addressController.text,
         'work_address': _workAddressController.text,
         'emergency_contact': _emergencyContactController.text,
-      });
+      };
+
+      // Validate form before updating data
+      _validateForm();
+      widget.onDataChanged!(data);
     }
   }
 }
