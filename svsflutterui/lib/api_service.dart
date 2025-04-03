@@ -11,10 +11,20 @@ class ApiService {
   static const String parentUrl = '$baseUrl/parent';
   static const String questionsUrl = '$baseUrl/questions';
 
+  SharedPreferences? _prefs;
+  bool _isInitialized = false;
+
+  Future<void> _ensureInitialized() async {
+    if (!_isInitialized) {
+      _prefs = await SharedPreferences.getInstance();
+      _isInitialized = true;
+    }
+  }
+
   // Get the stored token
   Future<String?> _getToken() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString('auth_token');
+    await _ensureInitialized();
+    return _prefs?.getString('auth_token');
   }
 
   // Login method
@@ -35,8 +45,8 @@ class ApiService {
         final token = data['token'];
         if (token != null) {
           // Store the token
-          SharedPreferences prefs = await SharedPreferences.getInstance();
-          await prefs.setString('auth_token', token);
+          await _ensureInitialized();
+          await _prefs?.setString('auth_token', token);
           return {
             'success': true,
             'token': token,
@@ -226,19 +236,18 @@ class ApiService {
     required Function(Map<String, dynamic>) setSummaryDetails,
     required Function(Map<String, dynamic>) setPageData,
   }) async {
-    // Retrieve the token from SharedPreferences
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    String? token = prefs.getString('auth_token');
-
-    // Define the URL and request body
-    String url = baseUrl;
-    Map<String, dynamic> jsonBody = {
-      'pageNo': [currentPage],
-      'itemCount': [10],
-      'sortMethod': ['DEFAULT'],
-    };
-
     try {
+      final token = await _getToken();
+      if (token == null) return;
+
+      // Define the URL and request body
+      String url = baseUrl;
+      Map<String, dynamic> jsonBody = {
+        'pageNo': [currentPage],
+        'itemCount': [10],
+        'sortMethod': ['DEFAULT'],
+      };
+
       // Make the POST request
       final response = await http.post(
         Uri.parse(url),
@@ -285,6 +294,146 @@ class ApiService {
       }
     } catch (e) {
       print('Error fetching data: $e');
+    }
+  }
+
+  Future<Map<String, dynamic>> getStudentsList({
+    required int page,
+    required int itemsPerPage,
+  }) async {
+    try {
+      final token = await _getToken();
+      if (token == null) {
+        return {
+          'status': 401,
+          'message': 'Not authenticated',
+          'data': [],
+          'total_pages': 1
+        };
+      }
+
+      final response = await http.get(
+        Uri.parse(
+            '$baseUrl/getStudentsList?page=$page&itemsPerPage=$itemsPerPage'),
+        headers: {
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        try {
+          final Map<String, dynamic> data = jsonDecode(response.body);
+
+          // Check if we have any data at all
+          if (data.isEmpty) {
+            return {
+              'status': 200,
+              'message': 'No students found',
+              'data': [],
+              'total_pages': 1
+            };
+          }
+
+          // If data is a list, wrap it in the expected structure
+          if (data is List) {
+            return {
+              'status': 200,
+              'message': 'Students retrieved successfully',
+              'data': data,
+              'total_pages': 1
+            };
+          }
+
+          // Check for expected structure
+          if (data.containsKey('data')) {
+            final responseData = data['data'];
+
+            // Handle both array and object responses
+            if (responseData is List) {
+              return {
+                'status': 200,
+                'message': data['message'] ?? 'Students retrieved successfully',
+                'data': responseData,
+                'total_pages': data['total_pages'] ?? 1
+              };
+            } else if (responseData is Map) {
+              // If data is a map, convert it to a list
+              return {
+                'status': 200,
+                'message': data['message'] ?? 'Students retrieved successfully',
+                'data': [responseData],
+                'total_pages': data['total_pages'] ?? 1
+              };
+            }
+          }
+
+          // If we get here, the response format is unexpected
+          return {
+            'status': 400,
+            'message': 'Invalid response format: ${data.runtimeType}',
+            'data': [],
+            'total_pages': 1
+          };
+        } catch (e) {
+          return {
+            'status': 400,
+            'message': 'Error parsing response: $e',
+            'data': [],
+            'total_pages': 1
+          };
+        }
+      } else {
+        try {
+          final errorData = jsonDecode(response.body);
+          return {
+            'status': response.statusCode,
+            'message': errorData['message'] ?? 'Failed to fetch students list',
+            'data': [],
+            'total_pages': 1
+          };
+        } catch (e) {
+          return {
+            'status': response.statusCode,
+            'message':
+                'Failed to fetch students list (Status: ${response.statusCode})',
+            'data': [],
+            'total_pages': 1
+          };
+        }
+      }
+    } catch (e) {
+      return {
+        'status': 500,
+        'message': 'An error occurred: $e',
+        'data': [],
+        'total_pages': 1
+      };
+    }
+  }
+
+  Future<Map<String, dynamic>> deleteStudent(int studentId) async {
+    try {
+      final token = await _getToken();
+      if (token == null) {
+        return {
+          'success': false,
+          'message': 'Not authenticated',
+        };
+      }
+
+      final response = await http.delete(
+        Uri.parse('$baseUrl/deleteStudent/$studentId'),
+        headers: {
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      return jsonDecode(response.body);
+    } catch (e) {
+      return {
+        'success': false,
+        'message': 'An error occurred: $e',
+      };
     }
   }
 }

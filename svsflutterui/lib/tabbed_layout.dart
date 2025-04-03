@@ -19,7 +19,22 @@ class TabbedLayout extends StatefulWidget {
   State<TabbedLayout> createState() => _TabbedLayoutState();
 }
 
-class _TabbedLayoutState extends State<TabbedLayout> {
+class _TabbedLayoutState extends State<TabbedLayout>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 4, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
   // Add method to collect form data
   Map<String, dynamic> collectFormData() {
     final studentData = _getStudentData();
@@ -50,68 +65,70 @@ class _TabbedLayoutState extends State<TabbedLayout> {
 
   @override
   Widget build(BuildContext context) {
-    return TabBarView(
-      controller: widget.tabController,
-      physics: NeverScrollableScrollPhysics(),
-      children: [
-        // Student Tab
-        KeepAliveWrapper(
-          child: SingleChildScrollView(
-            child: Container(
-              color: Colors.transparent,
-              child: SizedBox(
-                height: MediaQuery.of(context).size.height * 0.8,
-                child: StudentProfile(
-                  onValidationChanged: (isValid) =>
-                      widget.onValidationChanged(0, isValid),
+    return Material(
+      child: TabBarView(
+        controller: widget.tabController,
+        physics: NeverScrollableScrollPhysics(),
+        children: [
+          // Student Tab
+          KeepAliveWrapper(
+            child: SingleChildScrollView(
+              child: Container(
+                color: Colors.transparent,
+                child: SizedBox(
+                  height: MediaQuery.of(context).size.height * 0.8,
+                  child: StudentProfile(
+                    onValidationChanged: (isValid) =>
+                        widget.onValidationChanged(0, isValid),
+                  ),
                 ),
               ),
             ),
           ),
-        ),
-        // Parent Tab
-        KeepAliveWrapper(
-          child: SingleChildScrollView(
-            child: Container(
-              color: Colors.transparent,
-              child: SizedBox(
-                height: MediaQuery.of(context).size.height * 0.8,
-                child: ParentProfile(
-                  onValidationChanged: (isValid) =>
-                      widget.onValidationChanged(1, isValid),
+          // Parent Tab
+          KeepAliveWrapper(
+            child: SingleChildScrollView(
+              child: Container(
+                color: Colors.transparent,
+                child: SizedBox(
+                  height: MediaQuery.of(context).size.height * 0.8,
+                  child: ParentProfile(
+                    onValidationChanged: (isValid) =>
+                        widget.onValidationChanged(1, isValid),
+                  ),
                 ),
               ),
             ),
           ),
-        ),
-        // Questions Tab
-        KeepAliveWrapper(
-          child: SingleChildScrollView(
-            child: Container(
-              color: Colors.transparent,
-              child: SizedBox(
-                height: MediaQuery.of(context).size.height * 0.8,
-                child: Questions(
-                  onValidationChanged: (isValid) =>
-                      widget.onValidationChanged(2, isValid),
+          // Questions Tab
+          KeepAliveWrapper(
+            child: SingleChildScrollView(
+              child: Container(
+                color: Colors.transparent,
+                child: SizedBox(
+                  height: MediaQuery.of(context).size.height * 0.8,
+                  child: Questions(
+                    onValidationChanged: (isValid) =>
+                        widget.onValidationChanged(2, isValid),
+                  ),
                 ),
               ),
             ),
           ),
-        ),
-        // Billing Tab
-        KeepAliveWrapper(
-          child: SingleChildScrollView(
-            child: Container(
-              color: Colors.transparent,
-              child: SizedBox(
-                height: MediaQuery.of(context).size.height * 0.8,
-                child: Center(child: Text('Billing Information')),
+          // Billing Tab
+          KeepAliveWrapper(
+            child: SingleChildScrollView(
+              child: Container(
+                color: Colors.transparent,
+                child: SizedBox(
+                  height: MediaQuery.of(context).size.height * 0.8,
+                  child: Center(child: Text('Billing Information')),
+                ),
               ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

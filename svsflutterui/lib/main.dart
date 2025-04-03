@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:svsflutterui/student_profile_screen.dart';
+import 'package:svsflutterui/student_list_screen.dart';
 import 'package:svsflutterui/api_service.dart';
 import 'auth_provider.dart';
 
@@ -46,26 +47,14 @@ class LoginScreen extends StatelessWidget {
           // Store the token in AuthProvider
           context.read<AuthProvider>().setToken(response['token']);
 
-          // Show the StudentProfileScreen
+          // Navigate to StudentListScreen
           if (context.mounted) {
-            showDialog(
-              context: context,
-              builder: (BuildContext context) {
-                return Dialog(
-                  child: Container(
-                    constraints: BoxConstraints(
-                      maxWidth: MediaQuery.of(context).size.width * 0.8,
-                      maxHeight: MediaQuery.of(context).size.height * 0.9,
-                    ),
-                    child: StudentProfileScreen(),
-                  ),
-                );
-              },
-            ).then((_) {
-              // Clear the text fields when dialog is closed
-              usernameController.clear();
-              passwordController.clear();
-            });
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => StudentListScreen(),
+              ),
+            );
           }
         } else {
           // Show error message from API

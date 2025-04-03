@@ -4,9 +4,15 @@ import 'package:svsflutterui/Student.dart';
 import 'package:svsflutterui/Parent.dart';
 import 'package:svsflutterui/Questions.dart';
 import 'package:svsflutterui/api_service.dart';
+import 'package:flutter/material.dart' show TabBar, TabBarView;
 
 class StudentProfileScreen extends StatefulWidget {
-  const StudentProfileScreen({super.key});
+  final Map<String, dynamic>? studentData;
+
+  const StudentProfileScreen({
+    super.key,
+    this.studentData,
+  });
 
   @override
   State<StudentProfileScreen> createState() => _StudentProfileScreenState();
@@ -24,7 +30,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
   bool _isQuestionsValid = false;
   final bool _isBillingValid = false;
   bool _isSaved = false;
-  bool _isSaving = false;
+  final bool _isSaving = false;
 
   // Form data notifiers
   final _studentData = ValueNotifier<Map<String, dynamic>>({});
@@ -43,6 +49,62 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
         _selectedIndex = _tabController.index;
       });
     });
+
+    // Initialize form data if studentData is provided
+    if (widget.studentData != null) {
+      _initializeFormData(widget.studentData!);
+    }
+  }
+
+  void _initializeFormData(Map<String, dynamic> data) {
+    // Initialize student data
+    _studentData.value = {
+      'name': data['full_name'] ?? '',
+      'nickname': data['nickname'] ?? '',
+      'school': data['school'] ?? '',
+      'other_info': data['other_info'] ?? '',
+      'dob': data['date_of_birth'] ?? '',
+      'age': data['age'] ?? '',
+      'gender': data['gender'] ?? '',
+      'branch': data['branch'] ?? '',
+      'nationality': data['nationality'] ?? '',
+      'photo': data['photograph'] ?? '',
+    };
+
+    // Initialize parent data
+    _parentData.value = {
+      'mother_first_name': data['mother_first_name'] ?? '',
+      'mother_contact': data['mother_contact'] ?? '',
+      'mother_email': data['mother_email'] ?? '',
+      'mother_social_media': data['mother_social_media'] ?? '',
+      'mother_profession': data['mother_profession'] ?? '',
+      'mother_date_of_birth': data['mother_date_of_birth'] ?? '',
+      'mother_age': data['mother_age'] ?? '',
+      'mother_photo': data['mother_photo'] ?? '',
+      'father_first_name': data['father_first_name'] ?? '',
+      'father_contact': data['father_contact'] ?? '',
+      'father_email': data['father_email'] ?? '',
+      'father_social_media': data['father_social_media'] ?? '',
+      'father_profession': data['father_profession'] ?? '',
+      'father_date_of_birth': data['father_date_of_birth'] ?? '',
+      'father_age': data['father_age'] ?? '',
+      'father_photo': data['father_photo'] ?? '',
+      'address': data['address'] ?? '',
+      'work_address': data['work_address'] ?? '',
+      'emergency_contact': data['emergency_contact'] ?? '',
+    };
+
+    // Initialize questions data
+    _questionsData.value = {
+      'source': data['source'] ?? '',
+      'others': data['other_source'] ?? '',
+    };
+
+    // Set validation states
+    _isStudentValid = true;
+    _isParentValid = true;
+    _isQuestionsValid = true;
+    _isSaved = true;
   }
 
   void _updateValidationState(int tabIndex, bool isValid) {
@@ -112,7 +174,6 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
           print('Error: One or more form sections are empty');
           throw Exception('Please fill in all required fields');
         }
-
         print('Building student data structure...');
         final studentData = {
           'full_name': _studentData.value['name'] ?? '',
@@ -125,6 +186,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
           'branch': _studentData.value['branch'] ?? '',
           'nationality': _studentData.value['nationality'] ?? '',
           'workshops': _studentData.value['workshops'] ?? [],
+          'photo': _studentData.value['photo'] ?? ''
         };
         print('Student data structure: $studentData');
 
@@ -138,6 +200,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
           'mother_date_of_birth':
               _parentData.value['mother_date_of_birth'] ?? '',
           'mother_age': _parentData.value['mother_age'] ?? '',
+          'mother_photo': _parentData.value['mother_photo'] ?? '',
           'father_first_name': _parentData.value['father_first_name'] ?? '',
           'father_contact': _parentData.value['father_contact'] ?? '',
           'father_email': _parentData.value['father_email'] ?? '',
@@ -146,6 +209,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
           'father_date_of_birth':
               _parentData.value['father_date_of_birth'] ?? '',
           'father_age': _parentData.value['father_age'] ?? '',
+          'father_photo': _parentData.value['father_photo'] ?? '',
           'address': _parentData.value['address'] ?? '',
           'work_address': _parentData.value['work_address'] ?? '',
           'emergency_contact': _parentData.value['emergency_contact'] ?? '',
@@ -215,7 +279,8 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
                 backgroundColor: Colors.green,
               ),
             );
-            Navigator.of(context).pop();
+            // Don't close the popup, just update the state
+            // Navigator.of(context).pop();
           }
         } else {
           print('Save failed: ${response['message']}');
@@ -281,31 +346,41 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
         preferredSize: Size.fromHeight(72),
         child: Container(
           color: Colors.white,
-          child: TabBar(
-            controller: _tabController,
-            isScrollable: true,
-            labelColor: Colors.black,
-            unselectedLabelColor: Colors.black,
-            labelStyle: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontFamily: 'Inter',
-                  letterSpacing: 0.0,
-                  fontWeight: FontWeight.bold,
+          child: Row(
+            children: [
+              IconButton(
+                icon: Icon(Icons.arrow_back),
+                onPressed: () => Navigator.pop(context),
+              ),
+              Expanded(
+                child: TabBar(
+                  controller: _tabController,
+                  isScrollable: true,
+                  labelColor: Colors.black,
+                  unselectedLabelColor: Colors.black,
+                  labelStyle: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontFamily: 'Inter',
+                        letterSpacing: 0.0,
+                        fontWeight: FontWeight.bold,
+                      ),
+                  unselectedLabelStyle:
+                      Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontFamily: 'Inter',
+                            letterSpacing: 0.0,
+                          ),
+                  indicatorColor: Colors.black,
+                  indicatorWeight: 3,
+                  dividerColor: Colors.transparent,
+                  overlayColor: WidgetStateProperty.all(Colors.transparent),
+                  splashFactory: NoSplash.splashFactory,
+                  tabs: [
+                    Tab(text: 'Student'),
+                    Tab(text: 'Parent'),
+                    Tab(text: 'Questions'),
+                    Tab(text: 'Billing'),
+                  ],
                 ),
-            unselectedLabelStyle:
-                Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontFamily: 'Inter',
-                      letterSpacing: 0.0,
-                    ),
-            indicatorColor: Colors.black,
-            indicatorWeight: 3,
-            dividerColor: Colors.transparent,
-            overlayColor: MaterialStateProperty.all(Colors.transparent),
-            splashFactory: NoSplash.splashFactory,
-            tabs: [
-              Tab(text: 'Student'),
-              Tab(text: 'Parent'),
-              Tab(text: 'Questions'),
-              Tab(text: 'Billing'),
+              ),
             ],
           ),
         ),
@@ -429,7 +504,9 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
                           EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                       backgroundColor: _isFormValid
                           ? Theme.of(context).colorScheme.primary
-                          : Theme.of(context).colorScheme.surfaceVariant,
+                          : Theme.of(context)
+                              .colorScheme
+                              .surfaceContainerHighest,
                       foregroundColor: _isFormValid
                           ? Theme.of(context).colorScheme.onPrimary
                           : Theme.of(context).colorScheme.onSurfaceVariant,
