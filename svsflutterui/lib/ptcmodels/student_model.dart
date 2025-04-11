@@ -69,16 +69,16 @@ class StudentProfileModel {
 
 class StudentModel {
   // ignore: non_constant_identifier_names
-  String full_name;
-  String nickname;
-  String school;
-  String other_info;
-  String date_of_birth;
-  int age;
-  String gender;
-  String branch;
-  String nationality;
-  String photograph;
+  final String full_name;
+  final String nickname;
+  final String school;
+  final String other_info;
+  final String date_of_birth;
+  final int age;
+  final String gender;
+  final String branch;
+  final String nationality;
+  final String photograph;
 
   StudentModel({
     this.full_name = '',

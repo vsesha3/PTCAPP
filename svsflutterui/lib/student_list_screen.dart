@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:svsflutterui/api_service.dart';
+import 'package:svsflutterui/services/api_service.dart';
 import 'package:svsflutterui/student_profile_screen.dart';
-import 'package:svsflutterui/tabbed_layout.dart';
-import 'dart:convert';
+
+import 'package:svsflutterui/widgets/student/web/student_profile_web.dart';
 
 class StudentListScreen extends StatefulWidget {
   const StudentListScreen({super.key});
@@ -88,8 +88,6 @@ class _StudentListScreenState extends State<StudentListScreen> {
         _isLoading = false;
       });
     }
-
-    print('StudentListScreen Load Methods');
   }
 
   Future<void> _deleteStudent(int studentId) async {
@@ -151,37 +149,26 @@ class _StudentListScreenState extends State<StudentListScreen> {
     );
   }
 
-  void _showStudentForm({Map<String, dynamic>? studentData}) {
-    // Debug print
-    print('Showing student form with ID: ${studentData?['id']}');
-    print(MediaQuery.of(context).size.width);
-    if (MediaQuery.of(context).size.width >= 1024) {
-      Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (context) => TabbedLayout(
-            studentId: studentData?['id'],
-            onSave: () {
-              _loadStudents();
-            },
-          ),
-        ),
-      );
+  void _showStudentForm({int? studentId}) {
+    final isWeb = MediaQuery.of(context).size.width > 600;
+
+    if (isWeb) {
+      showDialog(
+        context: context,
+        builder: (context) => StudentProfileWeb(studentId: studentId),
+      ).then((_) => _loadStudents());
     } else {
       showDialog(
         context: context,
         builder: (context) => Dialog(
-          child: SizedBox(
+          child: Container(
             width: MediaQuery.of(context).size.width * 0.9,
             height: MediaQuery.of(context).size.height * 0.9,
-            child: StudentProfileScreen(
-              studentId: studentData?['id'],
-            ),
+            padding: const EdgeInsets.all(16),
+            child: StudentProfileScreen(studentId: studentId),
           ),
         ),
-      ).then((_) {
-        print('Student form closed, refreshing list...');
-        _loadStudents();
-      });
+      ).then((_) => _loadStudents());
     }
   }
 
@@ -216,7 +203,7 @@ class _StudentListScreenState extends State<StudentListScreen> {
                 case 'edit':
                   print(_selectedStudent);
                   if (_selectedStudent != null) {
-                    _showStudentForm(studentData: _selectedStudent);
+                    _showStudentForm(studentId: _selectedStudent!['id']);
                   }
                   break;
                 case 'delete':
@@ -444,7 +431,7 @@ class _StudentListScreenState extends State<StudentListScreen> {
                     onSelected: (value) {
                       switch (value) {
                         case 'edit':
-                          _showStudentForm(studentData: student);
+                          _showStudentForm(studentId: student['id']);
                           break;
                         case 'delete':
                           _showDeleteConfirmation(

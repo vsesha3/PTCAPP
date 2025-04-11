@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'api_service.dart';
+import 'package:svsflutterui/services/api_service.dart';
 
 class AuthProvider with ChangeNotifier {
   String? _token;

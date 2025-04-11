@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:svsflutterui/student_list_screen.dart';
-import 'package:svsflutterui/api_service.dart';
+import 'package:svsflutterui/services/api_service.dart';
 import 'package:provider/provider.dart';
 import 'package:svsflutterui/auth_provider.dart';
 import 'package:svsflutterui/web_layout.dart';

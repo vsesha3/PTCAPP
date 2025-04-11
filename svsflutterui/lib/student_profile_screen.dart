@@ -3,7 +3,7 @@ import 'package:svsflutterui/tabbed_layout.dart';
 import 'package:svsflutterui/Student.dart';
 import 'package:svsflutterui/Parent.dart';
 import 'package:svsflutterui/Questions.dart';
-import 'package:svsflutterui/api_service.dart';
+import 'package:svsflutterui/services/api_service.dart';
 
 class StudentProfileScreen extends StatefulWidget {
   final int? studentId;

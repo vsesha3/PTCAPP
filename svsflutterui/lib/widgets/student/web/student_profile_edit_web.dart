@@ -19,39 +19,11 @@ class StudentProfileEditWeb extends StatefulWidget {
 class _StudentProfileEditWebState extends State<StudentProfileEditWeb>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  late StudentProfileModel _studentProfile;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 4, vsync: this);
-    _studentProfile = widget.studentProfile;
-  }
-
-  void _updateStudentPhoto(String base64Image) {
-    setState(() {
-      _studentProfile = StudentProfileModel(
-        id: _studentProfile.id,
-        student: StudentModel(
-          full_name: _studentProfile.student.full_name,
-          nickname: _studentProfile.student.nickname,
-          school: _studentProfile.student.school,
-          other_info: _studentProfile.student.other_info,
-          date_of_birth: _studentProfile.student.date_of_birth,
-          age: _studentProfile.student.age,
-          gender: _studentProfile.student.gender,
-          branch: _studentProfile.student.branch,
-          nationality: _studentProfile.student.nationality,
-          photograph: base64Image,
-        ),
-        parent: _studentProfile.parent,
-        address: _studentProfile.address,
-        source: _studentProfile.source,
-        other_source: _studentProfile.other_source,
-        created_at: _studentProfile.created_at,
-        updated_at: _studentProfile.updated_at,
-      );
-    });
   }
 
   @override
@@ -81,10 +53,7 @@ class _StudentProfileEditWebState extends State<StudentProfileEditWeb>
           child: TabBarView(
             controller: _tabController,
             children: [
-              StudentEditTab(
-                student: _studentProfile.student,
-                onPhotoChanged: _updateStudentPhoto,
-              ),
+              _buildStudentTab(),
               _buildParentTab(),
               _buildQuestionsTab(),
               _buildAdmissionTab(),

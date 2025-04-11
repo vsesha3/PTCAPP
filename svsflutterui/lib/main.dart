@@ -17,8 +17,23 @@ class MyApp extends StatelessWidget {
       child: MaterialApp(
         title: 'Grooming Tales',
         theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: Colors.deepPurple,
+            background: Colors.white,
+            surface: Colors.white,
+          ),
           useMaterial3: true,
+          scaffoldBackgroundColor: Colors.white,
+          appBarTheme: const AppBarTheme(
+            backgroundColor: Colors.white,
+            elevation: 0,
+          ),
+          cardTheme: const CardTheme(
+            color: Colors.white,
+          ),
+          dialogTheme: const DialogTheme(
+            backgroundColor: Colors.white,
+          ),
         ),
         home: const LoginScreen(),
       ),
