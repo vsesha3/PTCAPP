@@ -381,7 +381,7 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: PreferredSize(
-        preferredSize: Size.fromHeight(72),
+        preferredSize: Size.fromHeight(48),
         child: Container(
           color: Colors.white,
           child: Row(
@@ -390,189 +390,601 @@ class _StudentProfileScreenState extends State<StudentProfileScreen>
                 icon: Icon(Icons.arrow_back),
                 onPressed: () => Navigator.pop(context),
               ),
-              Expanded(
-                child: TabBar(
-                  controller: _tabController,
-                  isScrollable: true,
-                  labelColor: Colors.black,
-                  unselectedLabelColor: Colors.black,
-                  labelStyle: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontFamily: 'Inter',
-                        letterSpacing: 0.0,
-                        fontWeight: FontWeight.bold,
-                      ),
-                  unselectedLabelStyle:
-                      Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontFamily: 'Inter',
-                            letterSpacing: 0.0,
-                          ),
-                  indicatorColor: Colors.black,
-                  indicatorWeight: 3,
-                  dividerColor: Colors.transparent,
-                  overlayColor: WidgetStateProperty.all(Colors.transparent),
-                  splashFactory: NoSplash.splashFactory,
-                  tabs: [
-                    Tab(text: 'Student'),
-                    Tab(text: 'Parent'),
-                    Tab(text: 'Questions'),
-                    Tab(text: 'Billing'),
-                  ],
-                ),
-              ),
             ],
           ),
         ),
       ),
       body: _isLoading
           ? Center(child: CircularProgressIndicator())
-          : Stack(
-              children: [
-                Form(
-                  key: _formKey,
-                  child: TabBarView(
-                    controller: _tabController,
-                    physics: NeverScrollableScrollPhysics(),
-                    children: [
-                      // Student Tab
-                      KeepAliveWrapper(
-                        child: SingleChildScrollView(
-                          child: Container(
-                            color: Colors.transparent,
-                            child: SizedBox(
-                              height: MediaQuery.of(context).size.height * 0.8,
-                              child:
-                                  ValueListenableBuilder<Map<String, dynamic>>(
-                                valueListenable: _studentData,
-                                builder: (context, data, child) {
-                                  return StudentProfile(
-                                    onValidationChanged: (isValid) =>
-                                        _updateValidationState(0, isValid),
-                                    onDataChanged: _updateStudentData,
-                                  );
-                                },
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      // Parent Tab
-                      KeepAliveWrapper(
-                        child: SingleChildScrollView(
-                          child: Container(
-                            color: Colors.transparent,
-                            child: SizedBox(
-                              height: MediaQuery.of(context).size.height * 0.8,
-                              child:
-                                  ValueListenableBuilder<Map<String, dynamic>>(
-                                valueListenable: _parentData,
-                                builder: (context, data, child) {
-                                  return ParentProfile(
-                                    onValidationChanged: (isValid) =>
-                                        _updateValidationState(1, isValid),
-                                    onDataChanged: _updateParentData,
-                                  );
-                                },
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      // Questions Tab
-                      KeepAliveWrapper(
-                        child: SingleChildScrollView(
-                          child: Container(
-                            color: Colors.transparent,
-                            child: SizedBox(
-                              height: MediaQuery.of(context).size.height * 0.8,
-                              child:
-                                  ValueListenableBuilder<Map<String, dynamic>>(
-                                valueListenable: _questionsData,
-                                builder: (context, data, child) {
-                                  return Questions(
-                                    onValidationChanged: (isValid) =>
-                                        _updateValidationState(2, isValid),
-                                    onDataChanged: _updateQuestionsData,
-                                  );
-                                },
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      // Billing Tab
-                      KeepAliveWrapper(
-                        child: SingleChildScrollView(
-                          child: Container(
-                            color: Colors.transparent,
-                            child: SizedBox(
-                              height: MediaQuery.of(context).size.height * 0.8,
-                              child: Center(child: Text('Billing Information')),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Positioned(
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
+          : MediaQuery.of(context).size.width >= 1024
+              ? Center(
                   child: Container(
-                    padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                    decoration: BoxDecoration(
-                      color: Colors.grey[100],
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 4,
-                          offset: Offset(0, -2),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
+                    constraints: BoxConstraints(maxWidth: 1200),
+                    child: Column(
                       children: [
-                        TextButton(
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                          },
-                          child: Text('Cancel'),
+                        Expanded(
+                          child: Stack(
+                            children: [
+                              Form(
+                                key: _formKey,
+                                child: TabBarView(
+                                  controller: _tabController,
+                                  physics: NeverScrollableScrollPhysics(),
+                                  children: [
+                                    // Student Tab
+                                    KeepAliveWrapper(
+                                      child: SingleChildScrollView(
+                                        child: Container(
+                                          color: Colors.transparent,
+                                          child: SizedBox(
+                                            height: MediaQuery.of(context)
+                                                    .size
+                                                    .height *
+                                                0.8,
+                                            child: ValueListenableBuilder<
+                                                Map<String, dynamic>>(
+                                              valueListenable: _studentData,
+                                              builder: (context, data, child) {
+                                                return StudentProfile(
+                                                  onValidationChanged:
+                                                      (isValid) =>
+                                                          _updateValidationState(
+                                                              0, isValid),
+                                                  onDataChanged:
+                                                      _updateStudentData,
+                                                );
+                                              },
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    // Parent Tab
+                                    KeepAliveWrapper(
+                                      child: SingleChildScrollView(
+                                        child: Container(
+                                          color: Colors.transparent,
+                                          child: SizedBox(
+                                            height: MediaQuery.of(context)
+                                                    .size
+                                                    .height *
+                                                0.8,
+                                            child: ValueListenableBuilder<
+                                                Map<String, dynamic>>(
+                                              valueListenable: _parentData,
+                                              builder: (context, data, child) {
+                                                return ParentProfile(
+                                                  onValidationChanged:
+                                                      (isValid) =>
+                                                          _updateValidationState(
+                                                              1, isValid),
+                                                  onDataChanged:
+                                                      _updateParentData,
+                                                );
+                                              },
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    // Questions Tab
+                                    KeepAliveWrapper(
+                                      child: SingleChildScrollView(
+                                        child: Container(
+                                          color: Colors.transparent,
+                                          child: SizedBox(
+                                            height: MediaQuery.of(context)
+                                                    .size
+                                                    .height *
+                                                0.8,
+                                            child: ValueListenableBuilder<
+                                                Map<String, dynamic>>(
+                                              valueListenable: _questionsData,
+                                              builder: (context, data, child) {
+                                                return Questions(
+                                                  onValidationChanged:
+                                                      (isValid) =>
+                                                          _updateValidationState(
+                                                              2, isValid),
+                                                  onDataChanged:
+                                                      _updateQuestionsData,
+                                                );
+                                              },
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    // Billing Tab
+                                    KeepAliveWrapper(
+                                      child: SingleChildScrollView(
+                                        child: Container(
+                                          color: Colors.transparent,
+                                          child: SizedBox(
+                                            height: MediaQuery.of(context)
+                                                    .size
+                                                    .height *
+                                                0.8,
+                                            child: Center(
+                                                child: Text(
+                                                    'Billing Information')),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                        SizedBox(width: 16),
-                        ElevatedButton(
-                          onPressed: _isFormValid ? _handleSave : null,
-                          style: ElevatedButton.styleFrom(
-                            padding: EdgeInsets.symmetric(
-                                horizontal: 24, vertical: 12),
-                            backgroundColor: _isFormValid
-                                ? Theme.of(context).colorScheme.primary
-                                : Theme.of(context)
-                                    .colorScheme
-                                    .surfaceContainerHighest,
-                            foregroundColor: _isFormValid
-                                ? Theme.of(context).colorScheme.onPrimary
-                                : Theme.of(context)
-                                    .colorScheme
-                                    .onSurfaceVariant,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
+                        Container(
+                          padding: EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            border: Border(
+                              top: BorderSide(
+                                color: Colors.grey[200]!,
+                                width: 1,
+                              ),
                             ),
                           ),
-                          child: Text(
-                            _isSaved ? 'Update' : 'Save',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: ElevatedButton(
+                                  onPressed: () => Navigator.pop(context),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.grey[200],
+                                    foregroundColor: Colors.grey[800],
+                                    padding: EdgeInsets.symmetric(vertical: 12),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                  ),
+                                  child: Text('Cancel'),
+                                ),
+                              ),
+                              SizedBox(width: 16),
+                              Expanded(
+                                child: ElevatedButton(
+                                  onPressed: _handleSave,
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor:
+                                        Theme.of(context).primaryColor,
+                                    foregroundColor: Colors.white,
+                                    padding: EdgeInsets.symmetric(vertical: 12),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                  ),
+                                  child: Text('Save'),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ],
                     ),
                   ),
+                )
+              : Column(
+                  children: [
+                    Expanded(
+                      child: ListView(
+                        children: [
+                          _buildAccordionItem(0, 'Student Information', [
+                            Container(
+                              width: 120,
+                              height: 120,
+                              margin: EdgeInsets.only(top: 16),
+                              child: Stack(
+                                children: [
+                                  Center(
+                                    child: Container(
+                                      width: 100,
+                                      height: 100,
+                                      decoration: BoxDecoration(
+                                        color: Colors.grey[200],
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                      child: Icon(
+                                        Icons.person,
+                                        size: 40,
+                                        color: Colors.grey[400],
+                                      ),
+                                    ),
+                                  ),
+                                  Positioned(
+                                    right: 0,
+                                    bottom: 0,
+                                    child: Container(
+                                      width: 32,
+                                      height: 32,
+                                      decoration: BoxDecoration(
+                                        color: Theme.of(context).primaryColor,
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                      child: Icon(
+                                        Icons.camera_alt,
+                                        size: 16,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            SizedBox(height: 4),
+                            Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 16),
+                              child: _buildTextField(
+                                label: 'Full Name',
+                                hint: 'Enter student\'s full name',
+                                icon: Icons.person_outline,
+                              ),
+                            ),
+                            SizedBox(height: 16),
+                            Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 16),
+                              child: _buildTextField(
+                                label: 'Nickname',
+                                hint: 'Enter student\'s nickname',
+                                icon: Icons.person_outline,
+                              ),
+                            ),
+                            SizedBox(height: 16),
+                            Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 16),
+                              child: _buildTextField(
+                                label: 'Date of Birth',
+                                hint: 'Select date of birth',
+                                icon: Icons.calendar_today,
+                                isDatePicker: true,
+                              ),
+                            ),
+                            SizedBox(height: 16),
+                            Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 16),
+                              child: _buildDropdownField(
+                                label: 'Gender',
+                                hint: 'Select gender',
+                                items: ['Male', 'Female', 'Other'],
+                                icon: Icons.person_outline,
+                              ),
+                            ),
+                            SizedBox(height: 16),
+                            Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 16),
+                              child: _buildTextField(
+                                label: 'School',
+                                hint: 'Enter school name',
+                                icon: Icons.school,
+                              ),
+                            ),
+                            SizedBox(height: 16),
+                            Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 16),
+                              child: _buildTextField(
+                                label: 'Branch',
+                                hint: 'Enter branch name',
+                                icon: Icons.location_on,
+                              ),
+                            ),
+                            SizedBox(height: 16),
+                            Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 16),
+                              child: _buildTextField(
+                                label: 'Nationality',
+                                hint: 'Enter nationality',
+                                icon: Icons.flag,
+                              ),
+                            ),
+                            SizedBox(height: 16),
+                            Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 16),
+                              child: _buildTextField(
+                                label: 'Other Information',
+                                hint: 'Enter any additional information',
+                                icon: Icons.info_outline,
+                              ),
+                            ),
+                          ]),
+                          _buildAccordionItem(1, 'Parent Information', []),
+                          _buildAccordionItem(2, 'Questions', []),
+                          _buildAccordionItem(3, 'Billing Information', []),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      padding: EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        border: Border(
+                          top: BorderSide(
+                            color: Colors.grey[200]!,
+                            width: 1,
+                          ),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: ElevatedButton(
+                              onPressed: () => Navigator.pop(context),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.grey[200],
+                                foregroundColor: Colors.grey[800],
+                                padding: EdgeInsets.symmetric(vertical: 12),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                              ),
+                              child: Text('Cancel'),
+                            ),
+                          ),
+                          SizedBox(width: 16),
+                          Expanded(
+                            child: ElevatedButton(
+                              onPressed: _handleSave,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Theme.of(context).primaryColor,
+                                foregroundColor: Colors.white,
+                                padding: EdgeInsets.symmetric(vertical: 12),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                              ),
+                              child: Text('Save'),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
     );
   }
+
+  Widget _buildTextField({
+    required String label,
+    required String hint,
+    required IconData icon,
+    bool isDatePicker = false,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Align(
+          alignment: Alignment.centerLeft,
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: Colors.grey[700],
+            ),
+          ),
+        ),
+        SizedBox(height: 8),
+        TextFormField(
+          textAlign: TextAlign.left,
+          decoration: InputDecoration(
+            hintText: hint,
+            hintStyle: TextStyle(),
+            prefixIcon: Icon(icon),
+            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            enabledBorder: OutlineInputBorder(
+              borderSide: BorderSide(
+                color: Theme.of(context).colorScheme.secondary.withOpacity(0.3),
+                width: 2,
+              ),
+              borderRadius: BorderRadius.circular(4),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderSide: BorderSide(
+                color: Theme.of(context).colorScheme.secondary,
+                width: 2,
+              ),
+              borderRadius: BorderRadius.circular(4),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderSide: BorderSide(
+                color: Theme.of(context).colorScheme.error,
+                width: 2,
+              ),
+              borderRadius: BorderRadius.circular(4),
+            ),
+            focusedErrorBorder: OutlineInputBorder(
+              borderSide: BorderSide(
+                color: Theme.of(context).colorScheme.error,
+                width: 2,
+              ),
+              borderRadius: BorderRadius.circular(4),
+            ),
+            filled: true,
+            fillColor: Theme.of(context).colorScheme.surface,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDropdownField({
+    required String label,
+    required String hint,
+    required List<String> items,
+    required IconData icon,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Align(
+          alignment: Alignment.centerLeft,
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: Colors.grey[700],
+            ),
+          ),
+        ),
+        SizedBox(height: 8),
+        DropdownButtonFormField<String>(
+          alignment: Alignment.centerLeft,
+          decoration: InputDecoration(
+            hintText: hint,
+            hintStyle: TextStyle(),
+            prefixIcon: Icon(icon),
+            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            enabledBorder: OutlineInputBorder(
+              borderSide: BorderSide(
+                color: Theme.of(context).colorScheme.secondary.withOpacity(0.3),
+                width: 2,
+              ),
+              borderRadius: BorderRadius.circular(4),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderSide: BorderSide(
+                color: Theme.of(context).colorScheme.secondary,
+                width: 2,
+              ),
+              borderRadius: BorderRadius.circular(4),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderSide: BorderSide(
+                color: Theme.of(context).colorScheme.error,
+                width: 2,
+              ),
+              borderRadius: BorderRadius.circular(4),
+            ),
+            focusedErrorBorder: OutlineInputBorder(
+              borderSide: BorderSide(
+                color: Theme.of(context).colorScheme.error,
+                width: 2,
+              ),
+              borderRadius: BorderRadius.circular(4),
+            ),
+            filled: true,
+            fillColor: Theme.of(context).colorScheme.surface,
+          ),
+          items: items.map((String value) {
+            return DropdownMenuItem<String>(
+              value: value,
+              child: Text(
+                value,
+                textAlign: TextAlign.left,
+              ),
+            );
+          }).toList(),
+          onChanged: (value) {
+            // Handle dropdown value change
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAccordionItem(int index, String title, List<Widget> content) {
+    return Column(
+      children: [
+        Container(
+          decoration: BoxDecoration(
+            border: Border(
+              bottom: BorderSide(
+                color: Colors.grey[200]!,
+                width: 1,
+              ),
+            ),
+          ),
+          child: Material(
+            color: _selectedIndex == index
+                ? Theme.of(context).primaryColor.withOpacity(0.1)
+                : Colors.white,
+            child: InkWell(
+              onTap: () {
+                setState(() {
+                  _selectedIndex = index;
+                  _tabController.animateTo(index);
+                });
+              },
+              child: Container(
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                child: Row(
+                  children: [
+                    Icon(
+                      _getIconForIndex(index),
+                      color: _selectedIndex == index
+                          ? Theme.of(context).primaryColor
+                          : Colors.grey[600],
+                      size: 20,
+                    ),
+                    SizedBox(width: 12),
+                    Text(
+                      title,
+                      style: TextStyle(
+                        color: _selectedIndex == index
+                            ? Theme.of(context).primaryColor
+                            : Colors.grey[800],
+                        fontWeight: _selectedIndex == index
+                            ? FontWeight.bold
+                            : FontWeight.normal,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+        if (_selectedIndex == index)
+          Container(
+            color: Colors.white,
+            child: Column(
+              children: content,
+            ),
+          ),
+      ],
+    );
+  }
+
+  IconData _getIconForIndex(int index) {
+    switch (index) {
+      case 0:
+        return Icons.person_outline;
+      case 1:
+        return Icons.family_restroom;
+      case 2:
+        return Icons.question_answer;
+      case 3:
+        return Icons.payment;
+      default:
+        return Icons.info;
+    }
+  }
+}
+
+class KeepAliveWrapper extends StatefulWidget {
+  final Widget child;
+
+  const KeepAliveWrapper({
+    super.key,
+    required this.child,
+  });
+
+  @override
+  State<KeepAliveWrapper> createState() => _KeepAliveWrapperState();
+}
+
+class _KeepAliveWrapperState extends State<KeepAliveWrapper>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
+    return widget.child;
+  }
+
+  @override
+  bool get wantKeepAlive => true;
 }

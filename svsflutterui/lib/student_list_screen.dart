@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:svsflutterui/api_service.dart';
 import 'package:svsflutterui/student_profile_screen.dart';
+import 'package:svsflutterui/tabbed_layout.dart';
 import 'dart:convert';
 
 class StudentListScreen extends StatefulWidget {
@@ -19,7 +20,7 @@ class _StudentListScreenState extends State<StudentListScreen> {
   final int _itemsPerPage = 10;
   final ScrollController _scrollController = ScrollController();
   Map<String, dynamic>? _selectedStudent;
-  Set<int> _selectedStudentIds = {}; // Track multiple selected students
+  final Set<int> _selectedStudentIds = {}; // Track multiple selected students
   String? _errorMessage;
 
   @override
@@ -87,6 +88,8 @@ class _StudentListScreenState extends State<StudentListScreen> {
         _isLoading = false;
       });
     }
+
+    print('StudentListScreen Load Methods');
   }
 
   Future<void> _deleteStudent(int studentId) async {
@@ -149,22 +152,37 @@ class _StudentListScreenState extends State<StudentListScreen> {
   }
 
   void _showStudentForm({Map<String, dynamic>? studentData}) {
-    print('Showing student form with ID: ${studentData?['id']}'); // Debug print
-    showDialog(
-      context: context,
-      builder: (context) => Dialog(
-        child: SizedBox(
-          width: MediaQuery.of(context).size.width * 0.9,
-          height: MediaQuery.of(context).size.height * 0.9,
-          child: StudentProfileScreen(
+    // Debug print
+    print('Showing student form with ID: ${studentData?['id']}');
+    print(MediaQuery.of(context).size.width);
+    if (MediaQuery.of(context).size.width >= 1024) {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => TabbedLayout(
             studentId: studentData?['id'],
+            onSave: () {
+              _loadStudents();
+            },
           ),
         ),
-      ),
-    ).then((_) {
-      print('Student form closed, refreshing list...'); // Debug print
-      _loadStudents(); // Refresh list after dialog closes
-    });
+      );
+    } else {
+      showDialog(
+        context: context,
+        builder: (context) => Dialog(
+          child: SizedBox(
+            width: MediaQuery.of(context).size.width * 0.9,
+            height: MediaQuery.of(context).size.height * 0.9,
+            child: StudentProfileScreen(
+              studentId: studentData?['id'],
+            ),
+          ),
+        ),
+      ).then((_) {
+        print('Student form closed, refreshing list...');
+        _loadStudents();
+      });
+    }
   }
 
   @override
@@ -196,6 +214,7 @@ class _StudentListScreenState extends State<StudentListScreen> {
             onSelected: (value) {
               switch (value) {
                 case 'edit':
+                  print(_selectedStudent);
                   if (_selectedStudent != null) {
                     _showStudentForm(studentData: _selectedStudent);
                   }
@@ -329,7 +348,7 @@ class _StudentListScreenState extends State<StudentListScreen> {
     return SingleChildScrollView(
       controller: _scrollController,
       child: DataTable(
-        headingRowColor: MaterialStateProperty.all(Colors.grey[100]),
+        headingRowColor: WidgetStateProperty.all(Colors.grey[100]),
         columns: [
           DataColumn(
             label: Icon(
@@ -439,10 +458,10 @@ class _StudentListScreenState extends State<StudentListScreen> {
                 ),
               ],
             );
-          }).toList(),
+          }),
           if (_selectedStudentIds.isNotEmpty)
             DataRow(
-              color: MaterialStateProperty.all(Colors.grey[50]),
+              color: WidgetStateProperty.all(Colors.grey[50]),
               cells: [
                 DataCell(
                   Text(

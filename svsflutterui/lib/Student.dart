@@ -2,15 +2,18 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:svsflutterui/models/student.dart';
 
 class StudentProfile extends StatefulWidget {
   final Function(bool) onValidationChanged;
   final Function(Map<String, dynamic>)? onDataChanged;
+  final Map<String, dynamic>? initialData;
 
   const StudentProfile({
     super.key,
     required this.onValidationChanged,
     this.onDataChanged,
+    this.initialData,
   });
 
   @override
@@ -19,88 +22,24 @@ class StudentProfile extends StatefulWidget {
 
 class _StudentProfileState extends State<StudentProfile> {
   final _formKey = GlobalKey<FormState>();
-  final _textController1 = TextEditingController();
-  final _textController2 = TextEditingController();
-  final _textController3 = TextEditingController();
-  final _textController4 = TextEditingController();
-  final _nickNameController = TextEditingController();
-  final _schoolController = TextEditingController();
-  final _otherInfoController = TextEditingController();
-  final _ageController = TextEditingController();
-  String _selectedGender = 'Male';
-  DateTime? _selectedDate;
-  String _selectedBranch = 'Bakhundole';
-  String? _photoBase64;
+  final _student = Student();
   final ImagePicker _picker = ImagePicker();
-
-  // Workshop selection states
-  final Map<String, bool> _workshopSelections = {
-    'Basic Grooming Workshop': false,
-    'Advanced Grooming Workshop': false,
-    'Pet Styling Workshop': false,
-    'Pet Care Workshop': false,
-    'Business Management Workshop': false,
-  };
-
-  // Workshop data loading states
-  List<Map<String, dynamic>> _workshopOptions = [];
-  String? _selectedWorkshop;
-  bool _isLoadingWorkshops = true;
-
-  // Nationality states
-  List<String> _nationalities = [];
-  String? _selectedNationality;
-  bool _isLoadingNationalities = true;
-
-  // Getter for selected workshops
-  List<String> get selectedWorkshops => _workshopSelections.entries
-      .where((entry) => entry.value)
-      .map((entry) => entry.key)
-      .toList();
-
-  // Getter for display text
-  String get workshopDisplayText {
-    if (selectedWorkshops.isEmpty) return 'Select workshops';
-    if (selectedWorkshops.length == 1) return selectedWorkshops.first;
-    return '${selectedWorkshops.length} workshops selected';
-  }
 
   @override
   void initState() {
     super.initState();
+    if (widget.initialData != null) {
+      _student.initializeFromData(widget.initialData!);
+    }
+
     // Add listeners to all text controllers
-    _textController1.addListener(() {
-      _validateForm();
-      _updateFormData();
-    });
-    _textController2.addListener(() {
-      _validateForm();
-      _updateFormData();
-    });
-    _textController3.addListener(() {
-      _validateForm();
-      _updateFormData();
-    });
-    _textController4.addListener(() {
-      _validateForm();
-      _updateFormData();
-    });
-    _nickNameController.addListener(() {
-      _validateForm();
-      _updateFormData();
-    });
-    _schoolController.addListener(() {
-      _validateForm();
-      _updateFormData();
-    });
-    _otherInfoController.addListener(() {
-      _validateForm();
-      _updateFormData();
-    });
-    _ageController.addListener(() {
-      _validateForm();
-      _updateFormData();
-    });
+    _student.nameController.addListener(_onFieldChanged);
+    _student.nickNameController.addListener(_onFieldChanged);
+    _student.schoolController.addListener(_onFieldChanged);
+    _student.otherInfoController.addListener(_onFieldChanged);
+    _student.ageController.addListener(_onFieldChanged);
+    _student.dateOfBirthController.addListener(_onFieldChanged);
+    _student.genderController.addListener(_onFieldChanged);
 
     // Load workshop data
     _loadWorkshopData();
@@ -111,23 +50,28 @@ class _StudentProfileState extends State<StudentProfile> {
     _validateForm();
   }
 
+  void _onFieldChanged() {
+    _validateForm();
+    _updateFormData();
+  }
+
   Future<void> _loadWorkshopData() async {
     try {
       final String jsonString =
           await rootBundle.loadString('lib/workshop_data.json');
       final Map<String, dynamic> jsonData = json.decode(jsonString);
       setState(() {
-        _workshopOptions =
+        _student.workshopOptions =
             List<Map<String, dynamic>>.from(jsonData['workshops']);
-        if (_workshopOptions.isNotEmpty) {
-          _selectedWorkshop = _workshopOptions[0]['id'];
+        if (_student.workshopOptions.isNotEmpty) {
+          _student.selectedWorkshop = _student.workshopOptions[0]['id'];
         }
-        _isLoadingWorkshops = false;
+        _student.isLoadingWorkshops = false;
       });
     } catch (e) {
       print('Error loading workshop data: $e');
       setState(() {
-        _isLoadingWorkshops = false;
+        _student.isLoadingWorkshops = false;
       });
     }
   }
@@ -138,14 +82,14 @@ class _StudentProfileState extends State<StudentProfile> {
           await rootBundle.loadString('lib/nationality_data.json');
       final Map<String, dynamic> jsonData = json.decode(jsonString);
       setState(() {
-        _nationalities = List<String>.from(jsonData['nationalities']);
-        _isLoadingNationalities = false;
+        _student.nationalities = List<String>.from(jsonData['nationalities']);
+        _student.isLoadingNationalities = false;
       });
-      print('Loaded nationalities: $_nationalities'); // Debug print
+      print('Loaded nationalities: ${_student.nationalities}'); // Debug print
     } catch (e) {
       print('Error loading nationality data: $e');
       setState(() {
-        _nationalities = [
+        _student.nationalities = [
           'Nepali',
           'Indian',
           'Chinese',
@@ -215,76 +159,29 @@ class _StudentProfileState extends State<StudentProfile> {
           'New Zealander',
           'Other'
         ];
-        _isLoadingNationalities = false;
+        _student.isLoadingNationalities = false;
       });
     }
   }
 
   void _validateForm() {
-    if (_formKey.currentState != null) {
-      bool isValid = true;
-
-      // Check if full name is provided
-      if (_textController1.text.isEmpty) {
-        isValid = false;
-      }
-
-      // Check if date of birth is provided
-      if (_textController3.text.isEmpty) {
-        isValid = false;
-      }
-
-      // Check if gender is selected
-      if (_selectedGender.isEmpty) {
-        isValid = false;
-      }
-
-      // Check if branch is selected
-      if (_selectedBranch.isEmpty) {
-        isValid = false;
-      }
-
-      // Check if nationality is selected
-      if (_selectedNationality == null) {
-        isValid = false;
-      }
-
-      // Check if at least one workshop is selected
-      if (selectedWorkshops.isEmpty) {
-        isValid = false;
-      }
-
-      // Validate the form state
-      isValid = isValid && _formKey.currentState!.validate();
-
-      // Call the validation callback
-      widget.onValidationChanged(isValid);
-    }
-  }
-
-  void _calculateAge(DateTime dateOfBirth) {
-    final today = DateTime.now();
-    int age = today.year - dateOfBirth.year;
-    if (today.month < dateOfBirth.month ||
-        (today.month == dateOfBirth.month && today.day < dateOfBirth.day)) {
-      age--;
-    }
-    _ageController.text = age.toString();
+    final isValid = _student.validateForm(_formKey);
+    widget.onValidationChanged(isValid);
   }
 
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: _selectedDate ?? DateTime.now(),
+      initialDate: _student.selectedDate ?? DateTime.now(),
       firstDate: DateTime(1900),
       lastDate: DateTime.now(),
     );
-    if (picked != null && picked != _selectedDate) {
+    if (picked != null && picked != _student.selectedDate) {
       setState(() {
-        _selectedDate = picked;
-        _textController3.text =
+        _student.selectedDate = picked;
+        _student.dateOfBirthController.text =
             "${picked.day.toString().padLeft(2, '0')}-${picked.month.toString().padLeft(2, '0')}-${picked.year}";
-        _calculateAge(picked);
+        _student.calculateAge(picked);
       });
       _validateForm();
     }
@@ -303,7 +200,7 @@ class _StudentProfileState extends State<StudentProfile> {
         final bytes = await image.readAsBytes();
         final base64String = base64Encode(bytes);
         setState(() {
-          _photoBase64 = base64String;
+          _student.photoBase64 = base64String;
         });
         _updateFormData();
       }
@@ -320,40 +217,13 @@ class _StudentProfileState extends State<StudentProfile> {
 
   void _updateFormData() {
     if (widget.onDataChanged != null) {
-      widget.onDataChanged!({
-        'name': _textController1.text,
-        'dob': _textController3.text,
-        'gender': _selectedGender,
-        'nationality': _selectedNationality,
-        'workshops': selectedWorkshops,
-        'branch': _selectedBranch,
-        'nickname': _nickNameController.text,
-        'school': _schoolController.text,
-        'other_info': _otherInfoController.text,
-        'age': _ageController.text,
-        'photo': _photoBase64,
-      });
+      widget.onDataChanged!(_student.getFormData());
     }
   }
 
   @override
   void dispose() {
-    _textController1.removeListener(_validateForm);
-    _textController2.removeListener(_validateForm);
-    _textController3.removeListener(_validateForm);
-    _textController4.removeListener(_validateForm);
-    _nickNameController.removeListener(_validateForm);
-    _schoolController.removeListener(_validateForm);
-    _otherInfoController.removeListener(_validateForm);
-    _ageController.removeListener(_validateForm);
-    _textController1.dispose();
-    _textController2.dispose();
-    _textController3.dispose();
-    _textController4.dispose();
-    _nickNameController.dispose();
-    _schoolController.dispose();
-    _otherInfoController.dispose();
-    _ageController.dispose();
+    _student.dispose();
     super.dispose();
   }
 
@@ -425,11 +295,11 @@ class _StudentProfileState extends State<StudentProfile> {
                               width: 2,
                             ),
                           ),
-                          child: _photoBase64 != null
+                          child: _student.photoBase64 != null
                               ? ClipRRect(
                                   borderRadius: BorderRadius.circular(6),
                                   child: Image.memory(
-                                    base64Decode(_photoBase64!),
+                                    base64Decode(_student.photoBase64!),
                                     fit: BoxFit.cover,
                                     width: 120,
                                     height: 120,
@@ -501,7 +371,7 @@ class _StudentProfileState extends State<StudentProfile> {
                                       ),
                                       SizedBox(height: 4),
                                       TextFormField(
-                                        controller: _textController1,
+                                        controller: _student.nameController,
                                         decoration: InputDecoration(
                                           hintText: 'Enter your full name',
                                           contentPadding: EdgeInsets.symmetric(
@@ -559,7 +429,8 @@ class _StudentProfileState extends State<StudentProfile> {
                                       ),
                                       SizedBox(height: 4),
                                       TextFormField(
-                                        controller: _textController3,
+                                        controller:
+                                            _student.dateOfBirthController,
                                         readOnly: true,
                                         onTap: () => _selectDate(context),
                                         decoration: InputDecoration(
@@ -633,7 +504,7 @@ class _StudentProfileState extends State<StudentProfile> {
                                       ),
                                       SizedBox(height: 4),
                                       TextFormField(
-                                        controller: _ageController,
+                                        controller: _student.ageController,
                                         readOnly: true,
                                         decoration: InputDecoration(
                                           hintText: 'Age will be calculated',
@@ -702,13 +573,15 @@ class _StudentProfileState extends State<StudentProfile> {
                                               child: RadioListTile<String>(
                                                 title: Text('Male'),
                                                 value: 'Male',
-                                                groupValue: _selectedGender,
+                                                groupValue:
+                                                    _student.selectedGender,
                                                 onChanged: (value) {
                                                   if (value != null) {
                                                     setState(() {
-                                                      _selectedGender = value;
-                                                      _textController4.text =
+                                                      _student.selectedGender =
                                                           value;
+                                                      _student.genderController
+                                                          .text = value;
                                                     });
                                                     _validateForm();
                                                   }
@@ -719,13 +592,15 @@ class _StudentProfileState extends State<StudentProfile> {
                                               child: RadioListTile<String>(
                                                 title: Text('Female'),
                                                 value: 'Female',
-                                                groupValue: _selectedGender,
+                                                groupValue:
+                                                    _student.selectedGender,
                                                 onChanged: (value) {
                                                   if (value != null) {
                                                     setState(() {
-                                                      _selectedGender = value;
-                                                      _textController4.text =
+                                                      _student.selectedGender =
                                                           value;
+                                                      _student.genderController
+                                                          .text = value;
                                                     });
                                                     _validateForm();
                                                   }
@@ -767,7 +642,8 @@ class _StudentProfileState extends State<StudentProfile> {
                                               EdgeInsetsDirectional.fromSTEB(
                                                   0, 4, 0, 0),
                                           child: TextFormField(
-                                            controller: _nickNameController,
+                                            controller:
+                                                _student.nickNameController,
                                             decoration: InputDecoration(
                                               hintText: 'Enter nick name',
                                               enabledBorder: OutlineInputBorder(
@@ -841,11 +717,12 @@ class _StudentProfileState extends State<StudentProfile> {
                                                     title: Text(
                                                         'Grooming tales, Bakhundole, Lalitpur'),
                                                     value: 'Bakhundole',
-                                                    groupValue: _selectedBranch,
+                                                    groupValue:
+                                                        _student.selectedBranch,
                                                     onChanged: (value) {
                                                       if (value != null) {
                                                         setState(() {
-                                                          _selectedBranch =
+                                                          _student.selectedBranch =
                                                               value;
                                                         });
                                                         _validateForm();
@@ -858,11 +735,12 @@ class _StudentProfileState extends State<StudentProfile> {
                                                     title: Text(
                                                         'Grooming tales, Gairidhara, Kathmandu'),
                                                     value: 'Gairidhara',
-                                                    groupValue: _selectedBranch,
+                                                    groupValue:
+                                                        _student.selectedBranch,
                                                     onChanged: (value) {
                                                       if (value != null) {
                                                         setState(() {
-                                                          _selectedBranch =
+                                                          _student.selectedBranch =
                                                               value;
                                                         });
                                                         _validateForm();
@@ -911,7 +789,7 @@ class _StudentProfileState extends State<StudentProfile> {
                                   padding: EdgeInsetsDirectional.fromSTEB(
                                       0, 4, 0, 0),
                                   child: TextFormField(
-                                    controller: _otherInfoController,
+                                    controller: _student.otherInfoController,
                                     maxLines: 2,
                                     decoration: InputDecoration(
                                       hintText:
@@ -986,7 +864,7 @@ class _StudentProfileState extends State<StudentProfile> {
                                           MainAxisAlignment.spaceBetween,
                                       children: [
                                         Text(
-                                          workshopDisplayText,
+                                          _student.workshopDisplayText,
                                           style: Theme.of(context)
                                               .textTheme
                                               .bodyMedium,
@@ -996,7 +874,7 @@ class _StudentProfileState extends State<StudentProfile> {
                                     ),
                                   ),
                                   itemBuilder: (BuildContext context) {
-                                    return _workshopSelections.entries
+                                    return _student.workshopSelections.entries
                                         .map((entry) {
                                       return PopupMenuItem<String>(
                                         value: entry.key,
@@ -1006,8 +884,9 @@ class _StudentProfileState extends State<StudentProfile> {
                                               value: entry.value,
                                               onChanged: (bool? value) {
                                                 setState(() {
-                                                  _workshopSelections[entry
-                                                      .key] = value ?? false;
+                                                  _student.workshopSelections[
+                                                          entry.key] =
+                                                      value ?? false;
                                                 });
                                                 _validateForm();
                                               },
@@ -1024,7 +903,7 @@ class _StudentProfileState extends State<StudentProfile> {
                                   },
                                 ),
                               ),
-                              if (selectedWorkshops.isEmpty)
+                              if (_student.selectedWorkshops.isEmpty)
                                 Padding(
                                   padding: EdgeInsetsDirectional.fromSTEB(
                                       0, 4, 0, 0),
@@ -1075,12 +954,12 @@ class _StudentProfileState extends State<StudentProfile> {
                                   ),
                                   child: DropdownButtonHideUnderline(
                                     child: DropdownButton<String>(
-                                      value: _selectedNationality,
+                                      value: _student.selectedNationality,
                                       isExpanded: true,
                                       padding:
                                           EdgeInsets.symmetric(horizontal: 12),
                                       hint: Text('Select nationality'),
-                                      items: _nationalities
+                                      items: _student.nationalities
                                           .map((String nationality) {
                                         return DropdownMenuItem<String>(
                                           value: nationality,
@@ -1089,7 +968,8 @@ class _StudentProfileState extends State<StudentProfile> {
                                       }).toList(),
                                       onChanged: (String? newValue) {
                                         setState(() {
-                                          _selectedNationality = newValue;
+                                          _student.selectedNationality =
+                                              newValue;
                                         });
                                         _validateForm();
                                       },
